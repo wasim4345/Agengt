@@ -15,8 +15,9 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
-  title: "Agengt — Content ideas",
-  description: "Generate one B2B content idea with Grok, server-side.",
+  title: "DTW founder-led content",
+  description:
+    "A guided workflow for founder-led LinkedIn drafts. You approve every stage. Work is saved in this browser only.",
 };
 
 export default function RootLayout({

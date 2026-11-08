@@ -18,8 +18,11 @@ type ChatCompletionResponse = {
 
 export async function createChatCompletion(
   messages: ChatMessage[],
+  options?: { temperature?: number; maxCompletionTokens?: number },
 ): Promise<string> {
   const { apiKey, model } = getXaiConfig();
+  const temperature = options?.temperature ?? 0.7;
+  const maxCompletionTokens = options?.maxCompletionTokens ?? 2500;
 
   let response: Response;
   try {
@@ -32,7 +35,8 @@ export async function createChatCompletion(
       body: JSON.stringify({
         model,
         messages,
-        temperature: 0.7,
+        temperature,
+        max_completion_tokens: maxCompletionTokens,
         response_format: { type: "json_object" },
       }),
     });

@@ -1,32 +1,68 @@
-# Agengt
+# DTW founder-led content
 
-Server-side xAI (Grok) integration that generates one B2B content idea at a time.
+A simple writing desk for one LinkedIn piece at a time. You stay in charge. Nothing is posted for you.
 
-The API key never ships to the browser. Server code reads `XAI_API_KEY` and `GROK_MODEL` from `.env.local` and does not log them.
+Work is saved in **this browser on this device**. It is not a shared database. A new phone, a different browser, or clearing site data will not keep the drafts.
 
-## Setup
+## What you will do
 
-1. Copy `.env.example` to `.env.local`.
-2. Set `XAI_API_KEY` from the [xAI console](https://console.x.ai).
-3. Set `GROK_MODEL` (for example `grok-4.7`).
-4. Install and run:
+1. Write down the business, the offer, the buyer, real experiences, and how you like to sound.
+2. Let the app turn that into positioning. Edit it. Approve it.
+3. Get ideas. Pick one. Approve it.
+4. Get a strategy brief. Edit it. Approve it.
+5. Get a LinkedIn draft. The app reviews it and may tidy it twice. You still approve the final text.
+6. Optionally turn that approved draft into an X post and thread. Copy the text. There is no publishing connection.
+
+Each writing role uses a different prompt. There is still only one Grok connection, on the server.
+
+## First-time setup (no coding)
+
+### 1. Install the app tools
+
+In the project folder, run:
 
 ```bash
 npm install
-npm test
+```
+
+### 2. Try it without an API key
+
+```bash
 npm run dev
 ```
 
-`.env.local` is gitignored. Do not prefix these variables with `NEXT_PUBLIC_`.
+Open http://127.0.0.1:3000
 
-## How it works
+Use **Load labelled sample answers**, then walk the stages. Sample text is marked `[SAMPLE]`. This is how you learn the buttons before Grok is connected.
 
-- `src/server/xai.ts` calls `https://api.x.ai/v1/chat/completions` with the key in an `Authorization` header.
-- `src/server/generate-content-idea.ts` asks Grok for a single JSON content idea.
-- `POST /api/content-ideas` is the only public surface. It accepts an optional `{ "topic": "..." }` body.
+### 3. Connect Grok when you are ready
 
-## Tests
+1. Copy `.env.example` to a new file named `.env.local`.
+2. Put your xAI key in `XAI_API_KEY`.
+3. Leave `GROK_MODEL` as `grok-4.7` unless you were told to change it.
+4. Restart `npm run dev`.
 
-`npm test` mocks xAI and asserts that one content idea is returned and that the API key is never written to logs or error messages.
+The key stays on the server. It is never shown in the page. `.env.local` is ignored by git.
 
-If `.env.local` contains a real key, a live case also runs against xAI.
+If you do not have a key yet, keep using the labelled sample path. The workflow is the same.
+
+### 4. Checks
+
+```bash
+npm test
+```
+
+## Rules the writers follow
+
+- No invented stories, quotes, customers, or results.
+- No statistics.
+- If a fact is missing, the app asks or leaves it out.
+- No live web search. You may paste notes; they are not treated as verified news.
+- The customer is the hero. The founder is the guide.
+- DTW restriction, editable in the profile: do not mention IIMCIP in marketing content.
+
+## Before putting this on a public website
+
+This version limits request size, output length, and revision rounds on the server. Browser limits are not enough on their own. Before a public launch, add stronger server usage controls (accounts or a stricter cap). Do not publish the API key.
+
+The old one-idea helper still lives under `src/server/generate-content-idea.ts` and is covered by tests.
