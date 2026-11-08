@@ -1,0 +1,147 @@
+:root {
+  --bg: #14110e;
+  --bg-elevated: #1d1914;
+  --ink: #f4ead8;
+  --muted: #b7aa94;
+  --line: rgba(244, 234, 216, 0.14);
+  --accent: #e05a33;
+  --accent-soft: #f3c07a;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  font-family: var(--font-sans), "Segoe UI", sans-serif;
+  background:
+    radial-gradient(1200px 500px at 10% -10%, rgba(224, 90, 51, 0.16), transparent 55%),
+    radial-gradient(900px 420px at 100% 0%, rgba(243, 192, 122, 0.1), transparent 50%),
+    var(--bg);
+  color: var(--ink);
+}
+
+main {
+  width: min(720px, calc(100% - 40px));
+  margin: 0 auto;
+  padding: 72px 0 96px;
+}
+
+.kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--accent-soft);
+  font-size: 0.78rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+h1 {
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: clamp(2.4rem, 6vw, 4.2rem);
+  font-weight: 560;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  margin: 18px 0 16px;
+}
+
+.lede {
+  color: var(--muted);
+  font-size: 1.05rem;
+  line-height: 1.6;
+  max-width: 38rem;
+}
+
+form {
+  margin-top: 40px;
+  display: grid;
+  gap: 14px;
+}
+
+label {
+  font-size: 0.82rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+input[type="text"] {
+  width: 100%;
+  border: 1px solid var(--line);
+  background: var(--bg-elevated);
+  color: var(--ink);
+  border-radius: 14px;
+  padding: 16px 18px;
+  font: inherit;
+  font-size: 1rem;
+}
+
+input[type="text"]:focus {
+  outline: 2px solid rgba(224, 90, 51, 0.7);
+  outline-offset: 2px;
+}
+
+button {
+  justify-self: start;
+  border: 0;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff8f2;
+  font: inherit;
+  font-weight: 600;
+  padding: 12px 22px;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.error {
+  margin-top: 18px;
+  color: #f0a395;
+  font-size: 0.95rem;
+}
+
+article {
+  margin-top: 36px;
+  padding: 28px;
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  background: rgba(29, 25, 20, 0.86);
+}
+
+.meta {
+  color: var(--accent-soft);
+  font-size: 0.78rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+article h2 {
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: 1.8rem;
+  line-height: 1.2;
+  margin-bottom: 14px;
+}
+
+.hook {
+  font-size: 1.08rem;
+  line-height: 1.55;
+  margin-bottom: 18px;
+}
+
+.why {
+  color: var(--muted);
+  line-height: 1.55;
+}
