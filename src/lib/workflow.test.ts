@@ -130,12 +130,28 @@ describe("workflow approvals", () => {
     expect(canOpenStage(state, "draft")).toBe(false);
   });
 
-  it("saves an approved draft to the library without publishing", () => {
+  it("saves an approved draft to the library and opens Buffer, without sending", () => {
     const state = approvedThrough("draft");
     expect(state.draftStatus).toBe("approved");
     expect(state.library).toHaveLength(1);
     expect(state.library[0]?.linkedinDraft).toContain("nod through a demo");
+    expect(state.currentStage).toBe("buffer");
+    expect(canOpenStage(state, "buffer")).toBe(true);
+    expect(state.bufferStatus).toBe("empty");
+    expect(state.bufferSends.ideaId).toBeUndefined();
     expect(canOpenStage(state, "adapt")).toBe(true);
+  });
+
+  it("does not send to Buffer until the user records a send", () => {
+    const state = approvedThrough("draft");
+    expect(canOpenStage(emptyState(), "buffer")).toBe(false);
+    const sent = reducer(state, {
+      type: "record-buffer-send",
+      sends: { ideaId: "idea-buffer-1" },
+      sample: true,
+    });
+    expect(sent.bufferSends.ideaId).toBe("idea-buffer-1");
+    expect(sent.bufferStatus).toBe("approved");
   });
 
   it("does not duplicate a library entry on a second approve click", () => {

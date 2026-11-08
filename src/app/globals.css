@@ -186,7 +186,8 @@ textarea {
 
 button.primary,
 button.secondary,
-button.ghost {
+button.ghost,
+a.primary {
   min-height: 44px;
   border-radius: 999px;
   padding: 10px 18px;
@@ -195,10 +196,27 @@ button.ghost {
   cursor: pointer;
 }
 
-button.primary {
+button.primary,
+a.primary {
   border: 0;
   background: var(--accent);
   color: var(--accent-ink);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+
+.buffer-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  background: var(--paper);
+  border-radius: 12px;
 }
 
 button.secondary {

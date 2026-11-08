@@ -40,6 +40,16 @@ export default function LibraryPage() {
           <h2>{post.title}</h2>
           <p className="hint">{new Date(post.savedAt).toLocaleString()}</p>
           <p className="draft-view">{post.linkedinDraft}</p>
+          {post.buffer?.ideaId ? (
+            <p className="hint">
+              Buffer: idea {post.buffer.sample ? "(sample) " : ""}
+              {post.buffer.ideaId}
+              {post.buffer.linkedInPostId ? " · LinkedIn queued" : ""}
+              {post.buffer.xPostId ? " · X queued" : ""}
+            </p>
+          ) : (
+            <p className="hint">Not sent to Buffer yet.</p>
+          )}
           <div className="actions">
             <CopyButton text={post.linkedinDraft} label="Copy LinkedIn" />
             {post.xPost ? <CopyButton text={post.xPost} label="Copy X post" /> : null}

@@ -4,6 +4,7 @@ export type StageId =
   | "ideas"
   | "strategy"
   | "draft"
+  | "buffer"
   | "adapt";
 
 export type Status = "empty" | "ready" | "approved" | "stale";
@@ -69,6 +70,13 @@ export type XContent = {
   xThread: string[];
 };
 
+export type BufferSends = {
+  ideaId?: string;
+  linkedInPostId?: string;
+  xPostId?: string;
+  sample: boolean;
+};
+
 export type SavedPost = {
   id: string;
   savedAt: string;
@@ -77,6 +85,7 @@ export type SavedPost = {
   xPost?: string;
   xThread?: string[];
   sample: boolean;
+  buffer?: BufferSends;
 };
 
 export type AppState = {
@@ -93,6 +102,8 @@ export type AppState = {
   strategyStatus: Status;
   draft: DraftBundle | null;
   draftStatus: Status;
+  bufferSends: BufferSends;
+  bufferStatus: Status;
   xContent: XContent | null;
   xStatus: Status;
   library: SavedPost[];
@@ -106,5 +117,6 @@ export const STAGE_ORDER: StageId[] = [
   "ideas",
   "strategy",
   "draft",
+  "buffer",
   "adapt",
 ];

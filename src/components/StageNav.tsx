@@ -10,7 +10,8 @@ const STAGES: Array<{ id: StageId; label: string; status: (state: AppState) => S
   { id: "ideas", label: "3. Ideas", status: (state) => state.ideasStatus },
   { id: "strategy", label: "4. Strategy", status: (state) => state.strategyStatus },
   { id: "draft", label: "5. Draft", status: (state) => state.draftStatus },
-  { id: "adapt", label: "6. X copy", status: (state) => state.xStatus },
+  { id: "buffer", label: "6. Buffer", status: (state) => state.bufferStatus },
+  { id: "adapt", label: "7. X copy", status: (state) => state.xStatus },
 ];
 
 export function StageNav({

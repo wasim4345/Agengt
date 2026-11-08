@@ -2,6 +2,7 @@ import { EMPTY_PROFILE } from "./sample-profile";
 import { fingerprint } from "./fingerprint";
 import type {
   AppState,
+  BufferSends,
   DraftBundle,
   IdeaCard,
   Positioning,
@@ -28,6 +29,8 @@ export function emptyState(): AppState {
     strategyStatus: "empty",
     draft: null,
     draftStatus: "empty",
+    bufferSends: { sample: false },
+    bufferStatus: "empty",
     xContent: null,
     xStatus: "empty",
     library: [],
@@ -41,6 +44,7 @@ const AFTER_FOUNDATION: StageId[] = [
   "ideas",
   "strategy",
   "draft",
+  "buffer",
   "adapt",
 ];
 
@@ -60,6 +64,7 @@ export type Action =
   | { type: "set-draft"; draft: DraftBundle; sample: boolean }
   | { type: "edit-draft"; linkedinDraft: string }
   | { type: "approve-draft" }
+  | { type: "record-buffer-send"; sends: Partial<BufferSends>; sample: boolean }
   | { type: "set-x"; xContent: XContent; sample: boolean }
   | { type: "new-piece" };
 
@@ -75,6 +80,8 @@ export function canOpenStage(state: AppState, stage: StageId): boolean {
       return state.ideaApproved && state.ideasStatus === "approved";
     case "draft":
       return state.strategyStatus === "approved";
+    case "buffer":
+      return state.draftStatus === "approved";
     case "adapt":
       return state.draftStatus === "approved";
     default:
@@ -199,8 +206,8 @@ export function reducer(state: AppState, action: Action): AppState {
         draft: { ...state.draft, linkedinDraft: action.linkedinDraft },
         draftStatus: "ready",
       };
-      if (state.draftStatus === "approved" && hasWork(state, "adapt")) {
-        next = markStaleFrom(next, "adapt");
+      if (state.draftStatus === "approved" && hasWork(state, "buffer")) {
+        next = markStaleFrom(next, "buffer");
       }
       return next;
     }
@@ -219,7 +226,28 @@ export function reducer(state: AppState, action: Action): AppState {
       return {
         ...state,
         draftStatus: "approved",
+        bufferStatus: "empty",
+        bufferSends: { sample: false },
         library: [saved, ...state.library],
+        currentStage: "buffer",
+      };
+    }
+    case "record-buffer-send": {
+      if (state.draftStatus !== "approved") return state;
+      const bufferSends: BufferSends = {
+        ...state.bufferSends,
+        ...action.sends,
+        sample: action.sample,
+      };
+      const library = state.library.map((post, index) =>
+        index === 0 ? { ...post, buffer: bufferSends } : post,
+      );
+      return {
+        ...state,
+        bufferSends,
+        bufferStatus: "approved",
+        library,
+        currentStage: "buffer",
       };
     }
     case "set-x": {
@@ -252,6 +280,8 @@ export function reducer(state: AppState, action: Action): AppState {
         strategyStatus: "empty",
         draft: null,
         draftStatus: "empty",
+        bufferSends: { sample: false },
+        bufferStatus: "empty",
         xContent: null,
         xStatus: "empty",
         currentStage:
@@ -272,6 +302,8 @@ function hasWork(state: AppState, stage: StageId): boolean {
       return state.strategyStatus !== "empty";
     case "draft":
       return state.draftStatus !== "empty";
+    case "buffer":
+      return state.bufferStatus !== "empty";
     case "adapt":
       return state.xStatus !== "empty";
     default:
@@ -309,6 +341,12 @@ function markStageStale(state: AppState, stage: StageId): AppState {
       };
     case "draft":
       return { ...state, draftStatus: statusToStale(state.draftStatus) };
+    case "buffer":
+      return {
+        ...state,
+        bufferStatus: statusToStale(state.bufferStatus),
+        bufferSends: { sample: false },
+      };
     case "adapt":
       return { ...state, xStatus: statusToStale(state.xStatus) };
     default:

@@ -1,6 +1,8 @@
 "use client";
 
 import { AdaptStage } from "@/components/AdaptStage";
+import { BufferBar, type BufferStatus } from "@/components/BufferBar";
+import { BufferStage } from "@/components/BufferStage";
 import { DraftStage } from "@/components/DraftStage";
 import { Foundation } from "@/components/Foundation";
 import { IdeasStage } from "@/components/IdeasStage";
@@ -12,7 +14,7 @@ import { SAMPLE_PROFILE } from "@/lib/sample-profile";
 import { LOADING_COPY, payloadFor } from "@/lib/payloads";
 import { loadState, saveState } from "@/lib/storage";
 import type { AgentRole, DraftBundle, IdeaCard, Positioning, StrategyBrief, XContent } from "@/lib/types";
-import { emptyState, reducer } from "@/lib/workflow";
+import { emptyState, reducer, selectedIdea } from "@/lib/workflow";
 import Link from "next/link";
 import { useEffect, useReducer, useState } from "react";
 
@@ -22,6 +24,9 @@ export default function HomePage() {
   const [generating, setGenerating] = useState<AgentRole | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [grok, setGrok] = useState(false);
+  const [buffer, setBuffer] = useState<BufferStatus | null>(null);
+  const [sending, setSending] = useState<string | null>(null);
+  const [bufferNotice, setBufferNotice] = useState<string | null>(null);
   const [profileDraft, setProfileDraft] = useState(state.profile);
 
   useEffect(() => {
@@ -35,6 +40,22 @@ export default function HomePage() {
         setGrok(Boolean(payload.grokConfigured));
       })
       .catch(() => setGrok(false));
+    fetch("/api/buffer/status")
+      .then((response) => response.json())
+      .then((payload: BufferStatus) => setBuffer(payload))
+      .catch(() =>
+        setBuffer({ configured: false, connected: false, sample: true }),
+      );
+    const params = new URLSearchParams(window.location.search);
+    const bufferFlag = params.get("buffer");
+    if (bufferFlag === "connected") setBufferNotice("Buffer is connected.");
+    if (bufferFlag === "setup") {
+      setBufferNotice(
+        "Buffer is not set up on this computer yet. You can still try a labelled sample send.",
+      );
+    }
+    if (bufferFlag === "denied") setBufferNotice("Buffer sign-in was cancelled.");
+    if (bufferFlag === "error") setBufferNotice("Buffer sign-in did not finish. Try Connect Buffer again.");
   }, []);
 
   useEffect(() => {
@@ -101,6 +122,60 @@ export default function HomePage() {
     dispatch({ type: "set-x", xContent: result as XContent, sample });
   }
 
+  async function sendToBuffer(
+    action: "idea" | "queue-linkedin" | "queue-x",
+    channelId?: string,
+  ) {
+    if (sending || state.draftStatus !== "approved" || !state.draft) return;
+    setSending(action);
+    setError(null);
+    const idea = selectedIdea(state);
+    const text =
+      action === "queue-x"
+        ? state.xContent?.xPost || ""
+        : action === "idea"
+          ? `${idea?.title || "Idea"}\n\n${idea?.angle || ""}\n\n${state.draft.linkedinDraft}`
+          : state.draft.linkedinDraft;
+    try {
+      const response = await fetch("/api/buffer/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action,
+          channelId,
+          title: idea?.title,
+          text,
+        }),
+      });
+      const payload = (await response.json()) as {
+        id?: string;
+        sample?: boolean;
+        message?: string;
+        error?: string;
+      };
+      if (!response.ok || !payload.id) {
+        setError(payload.error || "Could not send to Buffer.");
+        return;
+      }
+      const sends =
+        action === "idea"
+          ? { ideaId: payload.id }
+          : action === "queue-linkedin"
+            ? { linkedInPostId: payload.id }
+            : { xPostId: payload.id };
+      dispatch({
+        type: "record-buffer-send",
+        sends,
+        sample: Boolean(payload.sample),
+      });
+      setBufferNotice(payload.message || "Sent to Buffer.");
+    } catch {
+      setError("Could not reach Buffer. Your draft is still saved in this browser.");
+    } finally {
+      setSending(null);
+    }
+  }
+
   if (!hydrated) {
     return (
       <div className="app-shell">
@@ -120,15 +195,17 @@ export default function HomePage() {
       </header>
       <h1>Write one piece at a time, with you in charge of every gate.</h1>
       <p className="lede">
+        Write here, approve each stage, then send the finished piece to Buffer.
         Notes stay on this device and this browser. They are not a shared
-        database. Clearing site data, using another phone, or switching browsers
-        will not bring this work with you.
+        database.
       </p>
+      <BufferBar status={buffer} />
       <p className="storage-note">
         {grok
-          ? "Grok is connected on the server. Generated text still needs your approval before it is treated as finished."
-          : "Grok is not connected yet, so each generate step uses clearly labelled [SAMPLE] text. You can still walk the full workflow. When you add an API key later, the same buttons will call Grok."}
+          ? "Grok is connected on the server. Generated text still needs your approval before anything goes to Buffer."
+          : "Grok is not connected yet, so writing steps use labelled [SAMPLE] text. Buffer sends are also sample until you add a Buffer client ID."}
       </p>
+      {bufferNotice ? <Notice kind="ok">{bufferNotice}</Notice> : null}
 
       <StageNav
         state={state}
@@ -201,6 +278,18 @@ export default function HomePage() {
             dispatch({ type: "edit-draft", linkedinDraft })
           }
           onApprove={() => dispatch({ type: "approve-draft" })}
+        />
+      ) : null}
+
+      {state.currentStage === "buffer" ? (
+        <BufferStage
+          status={buffer}
+          sends={state.bufferSends}
+          sending={sending}
+          linkedinDraft={state.draft?.linkedinDraft || ""}
+          xPost={state.xContent?.xPost}
+          ideaTitle={selectedIdea(state)?.title || "Approved draft"}
+          onSend={sendToBuffer}
         />
       ) : null}
 
