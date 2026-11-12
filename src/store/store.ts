@@ -56,6 +56,8 @@ export type OsStore = {
   setRole: (role: Role) => Result<Role>;
   setUser: (userId: ID) => Result<ID>;
   setAllowRuleBreaking: (allow: boolean) => Result<boolean>;
+  markNotificationRead: (id: ID) => Result<true>;
+  markAllNotificationsRead: () => Result<number>;
 
   /** Data Manager escape hatch (doc 03) */
   rawUpsert: (entity: string, id: ID, value: unknown) => Result<true>;
@@ -409,6 +411,38 @@ export const useOsStore = create<OsStore>((set, get) => {
           summary: `Rule-breaking ${allow ? "enabled" : "disabled"}`,
         },
       ),
+
+    markNotificationRead: (id) =>
+      runMutation("markNotificationRead", (draft) => {
+        const note = draft.notifications[id];
+        if (!note) {
+          return err({
+            code: "NOTIFICATION_MISSING",
+            message: "Notification not found",
+          });
+        }
+        note.read = true;
+        return ok(true as const);
+      }),
+
+    markAllNotificationsRead: () =>
+      runMutation("markAllNotificationsRead", (draft) => {
+        const role = draft.meta.currentRole;
+        const userId = draft.meta.currentUserId;
+        let count = 0;
+        for (const note of Object.values(draft.notifications)) {
+          if (
+            !note.read &&
+            (note.roleOrUserId === role ||
+              note.roleOrUserId === userId ||
+              note.roleOrUserId === "all")
+          ) {
+            note.read = true;
+            count += 1;
+          }
+        }
+        return ok(count);
+      }),
 
     rawUpsert: (entity, id, value) =>
       runMutation(
