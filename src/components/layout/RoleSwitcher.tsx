@@ -25,13 +25,16 @@ export function RoleSwitcher() {
     <div className="relative">
       <button
         type="button"
-        className="inline-flex h-9 items-center gap-2 rounded-[var(--radius-control)] border border-border bg-surface px-3 text-sm hover:bg-background"
+        className="inline-flex h-9 items-center gap-2 rounded-[var(--radius-control)] border border-border bg-surface px-3 text-sm hover:bg-background focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-ring)]"
         aria-expanded={open}
         aria-haspopup="listbox"
+        data-testid="role-switcher"
         onClick={() => setOpen((v) => !v)}
       >
         <span className="text-muted">Role</span>
-        <span className="font-medium">{ROLE_LABELS[role]}</span>
+        <span className="font-medium" data-testid="current-role">
+          {ROLE_LABELS[role]}
+        </span>
         <ChevronDown className="h-3.5 w-3.5 text-muted" aria-hidden />
       </button>
       {open ? (
@@ -50,6 +53,7 @@ export function RoleSwitcher() {
                   "flex w-full px-3 py-2 text-left text-sm hover:bg-background",
                   r === role && "bg-primary/5 font-medium text-primary",
                 )}
+                data-testid={`role-option-${r}`}
                 onClick={() => {
                   switchRole(r, { preservePath: pathname });
                   setOpen(false);

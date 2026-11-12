@@ -8,12 +8,12 @@ import { Badge } from "@/components/ui";
 import { cn } from "@/lib/cn";
 import { normalisePath } from "@/lib/navConfig";
 
-export function Sidebar() {
+export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const { nav } = useRole();
   const pathname = normalisePath(usePathname() ?? "/");
 
   return (
-    <aside className="flex w-56 shrink-0 flex-col border-r border-border bg-surface">
+    <aside className="flex h-full w-56 shrink-0 flex-col bg-surface">
       <nav aria-label="Role navigation" className="flex flex-col gap-1 p-3">
         {nav.map((item) => {
           const href = normalisePath(item.href);
@@ -24,8 +24,10 @@ export function Sidebar() {
             <Link
               key={item.id}
               href={item.href}
+              onClick={() => onNavigate?.()}
               className={cn(
                 "flex items-center gap-2 rounded-[var(--radius-control)] px-3 py-2 text-sm transition-colors",
+                "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-ring)]",
                 active
                   ? "bg-primary text-primary-foreground"
                   : "text-foreground hover:bg-background",

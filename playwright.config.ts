@@ -1,15 +1,17 @@
 import { defineConfig, devices } from "@playwright/test";
 
 /**
- * Playwright scaffolding for later demo-script smoke tests (M12).
- * M0 does not require e2e green — unit tests + static build are the gate.
+ * Playwright — M12 demo script + responsive checks.
+ * Serves the static export from `out/` (builds if missing).
  */
 export default defineConfig({
   testDir: "./tests/e2e",
-  fullyParallel: true,
+  fullyParallel: false,
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
+  retries: process.env.CI ? 1 : 0,
+  workers: 1,
   reporter: "list",
+  timeout: 120_000,
   use: {
     baseURL: "http://127.0.0.1:3000",
     trace: "on-first-retry",
@@ -21,8 +23,10 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: "npm run start:static",
+    command:
+      "bash -lc 'test -d out || npm run build; npx --yes serve out -l 3000'",
     url: "http://127.0.0.1:3000",
     reuseExistingServer: !process.env.CI,
+    timeout: 180_000,
   },
 });
