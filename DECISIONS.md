@@ -1,5 +1,12 @@
 # Decisions
 
+## M2
+
+- **RoleGate source of truth:** each page’s `allow` prop gates rendering (children absent from DOM). `isPathAllowed` is used for sidebar/nav membership and role-switch path preservation.
+- **Client reports path:** `/client/reports/` (not shared `/reports/`) so client nav stays client-safe.
+- **Thin screens:** M2 routes show live store-backed lists/KPIs rather than “coming soon” placeholders; full dashboards/Gantt/wizard remain later milestones.
+- **Banner dismiss:** persisted per role in `localStorage` key `iimcip-os:v1:banner-dismissed:{role}`.
+
 ## M1
 
 - **Reset exactness:** `resetToSeed` replaces state with `buildDefaultSeed(demoDate)` (preserving role/user/rule-breaking prefs) without appending an extra log row, so the payload matches the pure seed.

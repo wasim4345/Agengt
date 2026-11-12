@@ -33,6 +33,8 @@ export function useOsActions() {
     setRole: s.setRole,
     setUser: s.setUser,
     setAllowRuleBreaking: s.setAllowRuleBreaking,
+    markNotificationRead: s.markNotificationRead,
+    markAllNotificationsRead: s.markAllNotificationsRead,
     undo: s.undo,
     rawUpsert: s.rawUpsert,
     rawDelete: s.rawDelete,
