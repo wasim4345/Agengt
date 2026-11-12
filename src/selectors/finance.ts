@@ -1,4 +1,5 @@
-import type { AppState, Expense, ID } from "@/types/domain";
+import type { Activity, AppState, Expense, ID } from "@/types/domain";
+import { overspendLevel } from "@/lib/rules/expense";
 
 export type ActivityFinancials = {
   activityId: ID;
@@ -10,6 +11,9 @@ export type ActivityFinancials = {
   remaining: number;
   variance: number;
   verifiedVariance: number;
+  utilisationReported: number | null;
+  utilisationVerified: number | null;
+  alert: "ok" | "warning" | "breach";
 };
 
 /**
@@ -47,6 +51,9 @@ export function activityFinancials(
   }
 
   const reported = verified + pending;
+  const utilisationReported = revised === 0 ? null : reported / revised;
+  const utilisationVerified = revised === 0 ? null : verified / revised;
+
   return {
     activityId,
     original,
@@ -57,14 +64,24 @@ export function activityFinancials(
     remaining: revised - reported,
     variance: revised - reported,
     verifiedVariance: revised - verified,
+    utilisationReported,
+    utilisationVerified,
+    alert: overspendLevel(reported, revised, state.meta.settings.warnPct),
   };
 }
 
+/**
+ * Allocated = Σ R_a over non-cancelled (+ Σ spend of cancelled, floor).
+ */
 export function programmeAllocated(state: AppState, programmeId: ID): number {
   let allocated = 0;
   for (const activity of Object.values(state.activities)) {
     if (activity.programmeId !== programmeId) continue;
-    if (activity.status === "cancelled") continue;
+    if (activity.status === "cancelled") {
+      const spend = activityFinancials(state, activity.id).reported;
+      allocated += spend;
+      continue;
+    }
     allocated += state.activityBudgets[activity.id]?.revised ?? 0;
   }
   return allocated;
@@ -95,5 +112,37 @@ export function programmeFinancials(state: AppState, programmeId: ID) {
     verified,
     pending,
     remaining: budget - reported,
+    surplusOrDeficit: budget - reported,
+    closureSurplus: budget - verified,
+    alert:
+      reported > budget
+        ? ("critical" as const)
+        : ("ok" as const),
   };
+}
+
+export function allocationPct(
+  state: AppState,
+  activityId: ID,
+): number | null {
+  const activity = state.activities[activityId];
+  if (!activity) return null;
+  const B = state.programmes[activity.programmeId]?.totalBudget ?? 0;
+  if (B === 0) return null;
+  const R = state.activityBudgets[activityId]?.revised ?? 0;
+  return R / B;
+}
+
+export function activitiesWithFinance(state: AppState, programmeId: ID) {
+  return Object.values(state.activities)
+    .filter((a) => a.programmeId === programmeId)
+    .map((a) => ({ activity: a, financials: activityFinancials(state, a.id) }));
+}
+
+export function assertFinanceIdentity(state: AppState): boolean {
+  for (const activity of Object.values(state.activities) as Activity[]) {
+    const fin = activityFinancials(state, activity.id);
+    if (fin.reported !== fin.verified + fin.pending) return false;
+  }
+  return true;
 }

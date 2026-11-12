@@ -1,5 +1,11 @@
 # Decisions
 
+## M3
+
+- **Coverage gate:** `npm test` runs Vitest with v8 coverage scoped to `src/lib/rules/**` and `src/selectors/**`, with ≥90% lines/functions/statements thresholds.
+- **Money in rules:** Budget/expense rules call `selectors/finance` rather than duplicating formulae (doc 04: finance maths lives only in finance selectors).
+- **No new UI:** M3 is pure logic; shell pages unchanged aside from available hook `useRoleSelectors` for later milestones.
+
 ## M2
 
 - **RoleGate source of truth:** each page’s `allow` prop gates rendering (children absent from DOM). `isPathAllowed` is used for sidebar/nav membership and role-switch path preservation.
