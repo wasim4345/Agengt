@@ -44,6 +44,7 @@ const BY_ROLE: Record<Role, NavItem[]> = {
   programme_manager: [
     { id: "dash", label: "My dashboard", href: "/manager/" },
     { id: "programmes", label: "My programmes", href: "/programmes/" },
+    { id: "timeline", label: "Timeline", href: "/timeline/" },
     { id: "new", label: "New programme", href: "/programmes/new/" },
     { id: "templates", label: "Templates", href: "/templates/" },
     { id: "reports", label: "Reports", href: "/reports/" },

@@ -328,6 +328,15 @@ export function applyAddActivity(
   return ok({ activityId: id });
 }
 
+const ACTIVE_ACTIVITY_FIELDS = new Set([
+  "status",
+  "percentComplete",
+  "revisedEnd",
+  "actualStart",
+  "actualEnd",
+  "cancellationReason",
+]);
+
 export function applyUpdateActivity(
   draft: AppState,
   activityId: ID,
@@ -338,8 +347,20 @@ export function applyUpdateActivity(
     return err({ code: "ACT_MISSING", message: "Activity not found" });
   }
   const programme = draft.programmes[activity.programmeId];
-  if (!programme || programme.status !== "draft") {
-    return err({ code: "PRG_LOCKED", message: "Activities locked" });
+  if (!programme) {
+    return err({ code: "PRG_MISSING", message: "Programme not found" });
+  }
+  if (programme.status === "draft") {
+    Object.assign(activity, patch);
+    return ok(activity);
+  }
+  // Active/pending: only execution fields (structure edits stay on draft / Gantt reschedule)
+  const keys = Object.keys(patch);
+  if (keys.some((k) => !ACTIVE_ACTIVITY_FIELDS.has(k))) {
+    return err({
+      code: "PRG_LOCKED",
+      message: "Structure fields are locked after activation. Use Gantt to reschedule.",
+    });
   }
   Object.assign(activity, patch);
   return ok(activity);
