@@ -1,0 +1,62 @@
+/** Stable seed identifiers used across builders and tests. */
+
+export const IDS = {
+  users: {
+    meera: "usr_meera",
+    arjun: "usr_arjun",
+    kavya: "usr_kavya",
+    rohit: "usr_rohit",
+    sunita: "usr_sunita",
+    priya: "usr_priya",
+    rahul: "usr_rahul",
+    anita: "usr_anita",
+    dev: "usr_dev",
+    sneha: "usr_sneha",
+  },
+  clients: {
+    vanguard: "cli_vanguard",
+    eastern: "cli_eastern",
+    greenfield: "cli_greenfield",
+    skills: "cli_skills",
+  },
+  categories: {
+    immersion: "cat_immersion",
+    pre: "cat_preincubation",
+    incubation: "cat_incubation",
+    acceleration: "cat_acceleration",
+  },
+  activityCategories: {
+    outreach: "acat_outreach",
+    selection: "acat_selection",
+    capacity: "acat_capacity",
+    mentoring: "acat_mentoring",
+    networking: "acat_networking",
+    events: "acat_events",
+    admin: "acat_admin",
+  },
+  expenseCategories: {
+    venue: "ecat_venue",
+    travel: "ecat_travel",
+    honorarium: "ecat_honorarium",
+    marketing: "ecat_marketing",
+    catering: "ecat_catering",
+    technology: "ecat_technology",
+    printing: "ecat_printing",
+    misc: "ecat_misc",
+  },
+  templates: {
+    immersion: "tpl_immersion",
+    pre: "tpl_preincubation",
+    incubation: "tpl_incubation",
+    acceleration: "tpl_acceleration",
+    corporate: "tpl_corporate_custom",
+  },
+  programmes: {
+    p1: "prg_p1",
+    p2: "prg_p2",
+    p3: "prg_p3",
+    p4: "prg_p4",
+    p5: "prg_p5",
+    p6: "prg_p6",
+  },
+} as const;

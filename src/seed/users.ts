@@ -1,0 +1,103 @@
+import type { User } from "@/types/domain";
+import { IDS } from "./ids";
+
+export function buildUsers(): Record<string, User> {
+  const u = IDS.users;
+  const list: User[] = [
+    {
+      id: u.meera,
+      name: "Dr. Meera Banerjee",
+      email: "meera.banerjee@iimcip.demo",
+      role: "leadership",
+      title: "Director",
+      avatarColor: "#0B2545",
+      active: true,
+    },
+    {
+      id: u.arjun,
+      name: "Arjun Sen",
+      email: "arjun.sen@iimcip.demo",
+      role: "programme_manager",
+      title: "Programme Manager",
+      avatarColor: "#2563EB",
+      active: true,
+    },
+    {
+      id: u.kavya,
+      name: "Kavya Rao",
+      email: "kavya.rao@iimcip.demo",
+      role: "programme_manager",
+      title: "Programme Manager",
+      avatarColor: "#7C3AED",
+      active: true,
+    },
+    {
+      id: u.rohit,
+      name: "Rohit Chatterjee",
+      email: "rohit.chatterjee@iimcip.demo",
+      role: "programme_manager",
+      title: "Programme Manager",
+      avatarColor: "#0891B2",
+      active: true,
+    },
+    {
+      id: u.sunita,
+      name: "Sunita Das",
+      email: "sunita.das@iimcip.demo",
+      role: "finance",
+      title: "Finance Lead",
+      avatarColor: "#B5543C",
+      active: true,
+    },
+    {
+      id: u.priya,
+      name: "Priya Nair",
+      email: "priya.nair@iimcip.demo",
+      role: "marcom",
+      title: "MarCom Lead",
+      avatarColor: "#DB2777",
+      active: true,
+    },
+    {
+      id: u.rahul,
+      name: "Rahul Mehta",
+      email: "rahul.mehta@vanguard.demo",
+      role: "client",
+      title: "Client Sponsor",
+      clientId: IDS.clients.vanguard,
+      avatarColor: "#15803D",
+      active: true,
+    },
+    {
+      id: u.anita,
+      name: "Anita Kulkarni",
+      email: "anita.kulkarni@eastern.demo",
+      role: "client",
+      title: "Client Sponsor",
+      clientId: IDS.clients.eastern,
+      avatarColor: "#CA8A04",
+      active: true,
+    },
+    {
+      id: u.dev,
+      name: "Dev Malhotra",
+      email: "dev.malhotra@greenfield.demo",
+      role: "client",
+      title: "Client Sponsor",
+      clientId: IDS.clients.greenfield,
+      avatarColor: "#0F766E",
+      active: true,
+    },
+    {
+      id: u.sneha,
+      name: "Sneha Iyer",
+      email: "sneha.iyer@skills.demo",
+      role: "client",
+      title: "Client Sponsor",
+      clientId: IDS.clients.skills,
+      avatarColor: "#4338CA",
+      active: true,
+    },
+  ];
+  return Object.fromEntries(list.map((user) => [user.id, user]));
+}
