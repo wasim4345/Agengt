@@ -6,10 +6,13 @@ import type {
   Activity,
   AppState,
   DepType,
+  EvidenceType,
+  Expense,
   ID,
   ISODate,
   Milestone,
   Programme,
+  ReportContent,
   Role,
   ScenarioName,
   SnapshotRecord,
@@ -70,6 +73,21 @@ import {
   applyRescheduleActivity,
   dismissImpactProposals,
 } from "./actions/gantt";
+import {
+  applyAddEvidenceMeta,
+  applyAddExpense,
+  applyApproveEvidence,
+  applyDeleteExpense,
+  applyReleaseReport,
+  applyResubmitExpense,
+  applyReturnReport,
+  applyReviseReport,
+  applySaveDraft,
+  applySoftDeleteEvidence,
+  applyStartReport,
+  applySubmitReport,
+  applyUpdateExpense,
+} from "./actions/execution";
 
 enablePatches();
 
@@ -236,6 +254,56 @@ export type OsStore = {
     sourceActivityId: ID,
     mode?: "all" | ID[],
   ) => Result<number>;
+
+  /** M7 execution */
+  startReport: (input: {
+    programmeId: ID;
+    activityId: ID;
+    type: "interim" | "final";
+  }) => Result<{ reportId: ID }>;
+  saveDraft: (reportId: ID, content: ReportContent) => Result<true>;
+  submitReport: (reportId: ID) => Result<true>;
+  reviseReport: (reportId: ID) => Result<true>;
+  releaseReport: (
+    reportId: ID,
+    opts?: { clientVisible?: boolean; marcomVisible?: boolean },
+  ) => Result<true>;
+  returnReport: (reportId: ID, comment: string) => Result<true>;
+  addExpense: (input: {
+    programmeId: ID;
+    activityId: ID;
+    reportId?: ID;
+    categoryId: ID;
+    description: string;
+    date: string;
+    amount: number;
+    justification?: string;
+    submit?: boolean;
+  }) => Result<{ expenseId: ID }>;
+  updateExpense: (
+    expenseId: ID,
+    patch: Partial<Expense> & { justification?: string },
+  ) => Result<true>;
+  deleteExpense: (expenseId: ID) => Result<true>;
+  resubmitExpense: (expenseId: ID) => Result<{ expenseId: ID }>;
+  addEvidenceMeta: (input: {
+    programmeId: ID;
+    activityId: ID;
+    reportId?: ID;
+    type: EvidenceType;
+    fileName: string;
+    mime: string;
+    size: number;
+    blobKey?: string;
+    thumb?: string;
+    caption?: string;
+  }) => Result<{ evidenceId: ID }>;
+  approveEvidence: (
+    evidenceId: ID,
+    audience: "client" | "marcom",
+    approved: boolean,
+  ) => Result<true>;
+  softDeleteEvidence: (evidenceId: ID, reason: string) => Result<true>;
 };
 
 let persistTimer: ReturnType<typeof setTimeout> | null = null;
@@ -1126,6 +1194,168 @@ export const useOsStore = create<OsStore>((set, get) => {
           entityId: sourceActivityId,
           action: "dismissImpacts",
           summary: `Dismissed downstream shifts from ${sourceActivityId}`,
+        },
+      ),
+
+    startReport: (input) =>
+      runMutation(
+        "startReport",
+        (draft) => applyStartReport(draft, input),
+        {
+          entity: "Report",
+          entityId: input.activityId,
+          action: "startReport",
+          summary: `Started ${input.type} report`,
+          programmeId: input.programmeId,
+        },
+      ),
+
+    saveDraft: (reportId, content) =>
+      runMutation(
+        "saveDraft",
+        (draft) => applySaveDraft(draft, reportId, content),
+        {
+          entity: "Report",
+          entityId: reportId,
+          action: "saveDraft",
+          summary: `Saved draft ${reportId}`,
+        },
+      ),
+
+    submitReport: (reportId) =>
+      runMutation(
+        "submitReport",
+        (draft) => applySubmitReport(draft, reportId),
+        {
+          entity: "Report",
+          entityId: reportId,
+          action: "submitReport",
+          summary: `Submitted report ${reportId}`,
+          notify: "Report submitted for Leadership release",
+        },
+      ),
+
+    reviseReport: (reportId) =>
+      runMutation(
+        "reviseReport",
+        (draft) => applyReviseReport(draft, reportId),
+        {
+          entity: "Report",
+          entityId: reportId,
+          action: "reviseReport",
+          summary: `Revised report ${reportId}`,
+        },
+      ),
+
+    releaseReport: (reportId, opts) =>
+      runMutation(
+        "releaseReport",
+        (draft) => applyReleaseReport(draft, reportId, opts),
+        {
+          entity: "Report",
+          entityId: reportId,
+          action: "releaseReport",
+          summary: `Released report ${reportId} to client`,
+          notify: "Report released to client",
+        },
+      ),
+
+    returnReport: (reportId, comment) =>
+      runMutation(
+        "returnReport",
+        (draft) => applyReturnReport(draft, reportId, comment),
+        {
+          entity: "Report",
+          entityId: reportId,
+          action: "returnReport",
+          summary: `Returned report ${reportId}`,
+        },
+      ),
+
+    addExpense: (input) =>
+      runMutation(
+        "addExpense",
+        (draft) => applyAddExpense(draft, input),
+        {
+          entity: "Expense",
+          entityId: input.activityId,
+          action: "addExpense",
+          summary: `Added expense on ${input.activityId}`,
+          programmeId: input.programmeId,
+        },
+      ),
+
+    updateExpense: (expenseId, patch) =>
+      runMutation(
+        "updateExpense",
+        (draft) => applyUpdateExpense(draft, expenseId, patch),
+        {
+          entity: "Expense",
+          entityId: expenseId,
+          action: "updateExpense",
+          summary: `Updated expense ${expenseId}`,
+        },
+      ),
+
+    deleteExpense: (expenseId) =>
+      runMutation(
+        "deleteExpense",
+        (draft) => applyDeleteExpense(draft, expenseId),
+        {
+          entity: "Expense",
+          entityId: expenseId,
+          action: "deleteExpense",
+          summary: `Deleted expense ${expenseId}`,
+        },
+      ),
+
+    resubmitExpense: (expenseId) =>
+      runMutation(
+        "resubmitExpense",
+        (draft) => applyResubmitExpense(draft, expenseId),
+        {
+          entity: "Expense",
+          entityId: expenseId,
+          action: "resubmitExpense",
+          summary: `Resubmitted expense from ${expenseId}`,
+        },
+      ),
+
+    addEvidenceMeta: (input) =>
+      runMutation(
+        "addEvidenceMeta",
+        (draft) => applyAddEvidenceMeta(draft, input),
+        {
+          entity: "Evidence",
+          entityId: input.activityId,
+          action: "addEvidenceMeta",
+          summary: `Uploaded evidence ${input.fileName}`,
+          programmeId: input.programmeId,
+        },
+      ),
+
+    approveEvidence: (evidenceId, audience, approved) =>
+      runMutation(
+        "approveEvidence",
+        (draft) =>
+          applyApproveEvidence(draft, evidenceId, audience, approved),
+        {
+          entity: "Evidence",
+          entityId: evidenceId,
+          action: "approveEvidence",
+          summary: `${approved ? "Approved" : "Unapproved"} evidence for ${audience}`,
+        },
+      ),
+
+    softDeleteEvidence: (evidenceId, reason) =>
+      runMutation(
+        "softDeleteEvidence",
+        (draft) => applySoftDeleteEvidence(draft, evidenceId, reason),
+        {
+          entity: "Evidence",
+          entityId: evidenceId,
+          action: "softDeleteEvidence",
+          summary: `Soft-deleted evidence ${evidenceId}`,
         },
       ),
   };

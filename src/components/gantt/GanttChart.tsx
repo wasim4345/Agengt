@@ -610,11 +610,7 @@ export function GanttChart({
                           setSelectedId(a.id);
                         }}
                         onDoubleClick={() => {
-                          push({
-                            title: "Activity workspace arrives in M7",
-                            description: a.name,
-                            tone: "info",
-                          });
+                          window.location.href = `/programmes/activity/?programmeId=${programmeId}&activityId=${a.id}`;
                         }}
                         onContextMenu={(ev) => {
                           ev.preventDefault();
@@ -809,10 +805,7 @@ export function GanttChart({
             type="button"
             className="block w-full px-3 py-1.5 text-left text-sm hover:bg-background"
             onClick={() => {
-              push({
-                title: "Workspace opens in M7",
-                tone: "info",
-              });
+              window.location.href = `/programmes/activity/?programmeId=${programmeId}&activityId=${menu.activityId}`;
               setMenu(null);
             }}
           >
