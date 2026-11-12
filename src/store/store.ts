@@ -28,6 +28,8 @@ import {
   applySetRole,
   applySetUser,
 } from "./actions/meta";
+import { validateEntityUpsert } from "./actions/dataValidation";
+import { applyQuickScenario } from "./actions/scenarios";
 
 enablePatches();
 
@@ -58,10 +60,33 @@ export type OsStore = {
   setAllowRuleBreaking: (allow: boolean) => Result<boolean>;
   markNotificationRead: (id: ID) => Result<true>;
   markAllNotificationsRead: () => Result<number>;
+  updateSettings: (
+    patch: Partial<AppState["meta"]["settings"]>,
+  ) => Result<AppState["meta"]["settings"]>;
 
-  /** Data Manager escape hatch (doc 03) */
+  /** Data Manager escape hatch (doc 03) — validates unless allowRuleBreaking */
   rawUpsert: (entity: string, id: ID, value: unknown) => Result<true>;
   rawDelete: (entity: string, id: ID) => Result<true>;
+  upsertArrayItem: (
+    entity: string,
+    match: (row: Record<string, unknown>) => boolean,
+    value: Record<string, unknown>,
+  ) => Result<true>;
+  deleteArrayItem: (
+    entity: string,
+    match: (row: Record<string, unknown>) => boolean,
+  ) => Result<true>;
+
+  /** Quick scenario buttons (P-DAT-03) */
+  runQuickScenario: (
+    name:
+      | "make_delayed"
+      | "add_overspend"
+      | "add_pending_x5"
+      | "complete_next"
+      | "release_latest"
+      | "add_startup_win",
+  ) => Result<string>;
 };
 
 let persistTimer: ReturnType<typeof setTimeout> | null = null;
@@ -363,7 +388,10 @@ export const useOsStore = create<OsStore>((set, get) => {
     importJSON: (json) => {
       try {
         const parsed = migrate(JSON.parse(json) as unknown);
-        return replaceState(parsed, "importJSON", "Imported JSON store");
+        // Exact replace so export→import round-trips identically
+        set({ state: parsed, lastUndo: null, quotaError: false });
+        schedulePersist(parsed, () => set({ quotaError: true }));
+        return ok(parsed);
       } catch {
         return err({
           code: "IMPORT_INVALID",
@@ -444,6 +472,21 @@ export const useOsStore = create<OsStore>((set, get) => {
         return ok(count);
       }),
 
+    updateSettings: (patch) =>
+      runMutation(
+        "updateSettings",
+        (draft) => {
+          draft.meta.settings = { ...draft.meta.settings, ...patch };
+          return ok(draft.meta.settings);
+        },
+        {
+          entity: "Meta",
+          entityId: "settings",
+          action: "updateSettings",
+          summary: "Updated demo settings thresholds",
+        },
+      ),
+
     rawUpsert: (entity, id, value) =>
       runMutation(
         "rawUpsert",
@@ -462,6 +505,8 @@ export const useOsStore = create<OsStore>((set, get) => {
               field: "entity",
             });
           }
+          const validation = validateEntityUpsert(draft, entity, id, value);
+          if (!validation.ok) return validation;
           (collection as Record<string, unknown>)[id] = value;
           return ok(true as const);
         },
@@ -469,7 +514,7 @@ export const useOsStore = create<OsStore>((set, get) => {
           entity,
           entityId: id,
           action: "rawUpsert",
-          summary: `Raw upsert ${entity}/${id}`,
+          summary: `Upsert ${entity}/${id}`,
         },
       ),
 
@@ -498,7 +543,77 @@ export const useOsStore = create<OsStore>((set, get) => {
           entity,
           entityId: id,
           action: "rawDelete",
-          summary: `Raw delete ${entity}/${id}`,
+          summary: `Delete ${entity}/${id}`,
+        },
+      ),
+
+    upsertArrayItem: (entity, match, value) =>
+      runMutation(
+        "upsertArrayItem",
+        (draft) => {
+          const collection = (draft as unknown as Record<string, unknown>)[
+            entity
+          ];
+          if (!Array.isArray(collection)) {
+            return err({
+              code: "ENTITY_UNKNOWN",
+              message: `Unknown entity array: ${entity}`,
+              field: "entity",
+            });
+          }
+          const idx = collection.findIndex((row) =>
+            match(row as Record<string, unknown>),
+          );
+          if (idx >= 0) collection[idx] = value;
+          else collection.push(value);
+          return ok(true as const);
+        },
+        {
+          entity,
+          entityId: "array",
+          action: "upsertArrayItem",
+          summary: `Upsert array item in ${entity}`,
+        },
+      ),
+
+    deleteArrayItem: (entity, match) =>
+      runMutation(
+        "deleteArrayItem",
+        (draft) => {
+          const collection = (draft as unknown as Record<string, unknown>)[
+            entity
+          ];
+          if (!Array.isArray(collection)) {
+            return err({
+              code: "ENTITY_UNKNOWN",
+              message: `Unknown entity array: ${entity}`,
+              field: "entity",
+            });
+          }
+          const next = collection.filter(
+            (row) => !match(row as Record<string, unknown>),
+          );
+          (draft as unknown as Record<string, unknown>)[entity] = next;
+          return ok(true as const);
+        },
+        {
+          entity,
+          entityId: "array",
+          action: "deleteArrayItem",
+          summary: `Delete array item in ${entity}`,
+        },
+      ),
+
+    runQuickScenario: (name) =>
+      runMutation(
+        "runQuickScenario",
+        (draft) => applyQuickScenario(draft, name),
+        {
+          entity: "AppState",
+          entityId: "scenario",
+          action: "runQuickScenario",
+          summary: `Quick scenario: ${name}`,
+          notify: `Applied quick scenario “${name}”`,
         },
       ),
   };

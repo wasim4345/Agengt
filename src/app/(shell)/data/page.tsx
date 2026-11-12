@@ -1,24 +1,15 @@
 "use client";
 
+import { useState } from "react";
 import { RoleGate } from "@/components/RoleGate";
 import { PageHeader } from "@/components/layout/PageHeader";
-import {
-  Badge,
-  Button,
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui";
-import { useIntegrity, useOsActions } from "@/hooks/useStore";
-import { useOsStore } from "@/store/store";
-import { useToast } from "@/components/ui";
+import { Badge } from "@/components/ui";
+import { ControlCentre } from "@/components/data/ControlCentre";
+import { EntityTabList, EntityTable } from "@/components/data/EntityTable";
+import type { EntityKind } from "@/components/data/entityRegistry";
 
 export default function DataManagerPage() {
-  const state = useOsStore((s) => s.state);
-  const actions = useOsActions();
-  const integrity = useIntegrity();
-  const { push } = useToast();
+  const [entity, setEntity] = useState<EntityKind>("programmes");
 
   return (
     <RoleGate
@@ -32,66 +23,23 @@ export default function DataManagerPage() {
     >
       <PageHeader
         title="Data Manager"
-        description="Presenter tools — full CRUD UI arrives in M4. Reset / scenarios work now."
+        description="Presenter tools — entity CRUD, scenarios, snapshots, import/export."
         actions={<Badge tone="neutral">Presenter tools</Badge>}
       />
-      <div className="grid gap-4 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Scenarios</CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-wrap gap-2">
-            <Button
-              onClick={() => {
-                const r = actions.resetToSeed();
-                push({
-                  title: r.ok ? "Reset to seed" : "Reset failed",
-                  tone: r.ok ? "success" : "danger",
-                });
-              }}
-            >
-              Reset to seed
-            </Button>
-            <Button
-              variant="secondary"
-              onClick={() => actions.loadScenario("healthy")}
-            >
-              Healthy
-            </Button>
-            <Button
-              variant="secondary"
-              onClick={() => actions.loadScenario("troubled")}
-            >
-              Troubled
-            </Button>
-            <Button variant="ghost" onClick={() => actions.clearAll()}>
-              Clear all
-            </Button>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Integrity</CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-2">
-            {integrity.checks.map((c) => (
-              <div
-                key={c.id}
-                className="flex items-center justify-between text-sm"
-              >
-                <span>{c.label}</span>
-                <Badge tone={c.ok ? "on-track" : "delayed"}>
-                  {c.ok ? "Pass" : "Fail"}
-                </Badge>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
+      <div className="grid gap-6 lg:grid-cols-[13rem_minmax(0,1fr)_20rem]">
+        <aside className="rounded-xl border border-border bg-surface p-2">
+          <p className="mb-2 px-2 text-xs font-semibold uppercase tracking-wide text-muted">
+            Entities
+          </p>
+          <EntityTabList active={entity} onChange={setEntity} />
+        </aside>
+        <section className="min-w-0">
+          <EntityTable entity={entity} />
+        </section>
+        <aside className="min-w-0">
+          <ControlCentre />
+        </aside>
       </div>
-      <p className="mt-4 text-xs text-muted">
-        Seed {state.meta.seedVersion} · {Object.keys(state.programmes).length}{" "}
-        programmes · {state.log.length} log entries
-      </p>
     </RoleGate>
   );
 }
