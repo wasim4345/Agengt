@@ -1,5 +1,12 @@
 # Changelog
 
+## M9 — Dashboards (2026-11-12)
+
+- Role dashboards (Leadership / PM / Client / MarCom / Finance) use Recharts + existing selectors; no hard-coded KPI numbers
+- Leadership filters persist in URL query (`category`, `client`, `manager`, `status`, `from`, `to`)
+- Empty states when a widget has no rows
+- **Behaviour fix:** `isOverdue` now treats an activity as overdue when demo date is *after* effective end (was inverted)
+
 ## M3 — Rules & selectors (2026-11-12)
 
 - `lib/rules`: dependencies (cycle/schedule/impact), programme validation (E/W), report validation (RPT_*), budget, expense

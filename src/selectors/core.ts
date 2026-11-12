@@ -18,7 +18,8 @@ export function isOverdue(
   if (!["in_progress", "not_started", "delayed"].includes(activity.status)) {
     return false;
   }
-  return dayDiff(effectiveEnd(activity), state.meta.demoDate) < 0;
+  // dayDiff(end, demo) = demo − end; overdue when demo is after effective end
+  return dayDiff(effectiveEnd(activity), state.meta.demoDate) > 0;
 }
 
 export function activityProgress(activity: Activity): number | null {
