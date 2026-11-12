@@ -103,12 +103,31 @@ function ProgrammeViewInner() {
           {programme.status === "draft" ? (
             <ActivityBuilder programmeId={id} />
           ) : (
-            <Card>
-              <CardContent className="py-4 text-sm text-muted">
-                Activity editing is available on draft programmes. Active
-                programmes use the activity workspace (M7).
-              </CardContent>
-            </Card>
+            <div className="flex flex-col gap-2">
+              {Object.values(state.activities)
+                .filter((a) => a.programmeId === id)
+                .sort((a, b) => a.sortOrder - b.sortOrder)
+                .map((a) => (
+                  <Card key={a.id}>
+                    <CardContent className="flex flex-wrap items-center justify-between gap-3 py-3">
+                      <div>
+                        <p className="text-sm font-medium">
+                          {a.code} · {a.name}
+                        </p>
+                        <p className="text-xs text-muted">{a.status}</p>
+                      </div>
+                      <Button
+                        size="sm"
+                        onClick={() => {
+                          window.location.href = `/programmes/activity/?programmeId=${id}&activityId=${a.id}`;
+                        }}
+                      >
+                        Open workspace
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ))}
+            </div>
           )}
         </TabsContent>
 

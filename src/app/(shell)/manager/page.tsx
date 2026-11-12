@@ -2,8 +2,16 @@
 
 import { RoleGate } from "@/components/RoleGate";
 import { PageHeader } from "@/components/layout/PageHeader";
-import { Badge, Card, CardContent, CardHeader, CardTitle } from "@/components/ui";
+import {
+  Badge,
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui";
 import { formatINR } from "@/lib/format/inr";
+import { IDS } from "@/seed/ids";
 import { useOsStore } from "@/store/store";
 
 export default function ManagerHomePage() {
@@ -17,6 +25,7 @@ export default function ManagerHomePage() {
       a.status === "delayed" &&
       mine.some((p) => p.id === a.programmeId),
   );
+  const outreach = state.activities["act_p1_a02"];
 
   return (
     <RoleGate allow={["programme_manager"]}>
@@ -36,11 +45,44 @@ export default function ManagerHomePage() {
               <span className="text-sm text-muted">
                 {formatINR(p.totalBudget)}
               </span>
-              <Badge tone="in-progress">{p.status}</Badge>
+              <div className="flex gap-2">
+                <Badge tone="in-progress">{p.status}</Badge>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => {
+                    window.location.href = `/programmes/view/?id=${p.id}`;
+                  }}
+                >
+                  Open
+                </Button>
+              </div>
             </CardContent>
           </Card>
         ))}
       </div>
+
+      {outreach && mine.some((p) => p.id === IDS.programmes.p1) ? (
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle className="text-base">Report now</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-wrap items-center justify-between gap-3">
+            <p className="text-sm text-muted">
+              Demo step 7 — open Outreach Sessions workspace to file a delay
+              report with expenses and photo evidence.
+            </p>
+            <Button
+              onClick={() => {
+                window.location.href = `/programmes/activity/?programmeId=${IDS.programmes.p1}&activityId=act_p1_a02`;
+              }}
+            >
+              Open Outreach Sessions
+            </Button>
+          </CardContent>
+        </Card>
+      ) : null}
+
       <Card className="mt-6">
         <CardHeader>
           <CardTitle>Delayed activities</CardTitle>
@@ -51,8 +93,22 @@ export default function ManagerHomePage() {
           ) : (
             <ul className="flex flex-col gap-2">
               {delayed.map((a) => (
-                <li key={a.id} className="text-sm">
-                  {a.code} · {a.name}
+                <li
+                  key={a.id}
+                  className="flex items-center justify-between gap-2 text-sm"
+                >
+                  <span>
+                    {a.code} · {a.name}
+                  </span>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => {
+                      window.location.href = `/programmes/activity/?programmeId=${a.programmeId}&activityId=${a.id}`;
+                    }}
+                  >
+                    Workspace
+                  </Button>
                 </li>
               ))}
             </ul>
