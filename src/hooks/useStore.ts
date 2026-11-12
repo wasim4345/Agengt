@@ -38,6 +38,10 @@ export function useOsActions() {
     undo: s.undo,
     rawUpsert: s.rawUpsert,
     rawDelete: s.rawDelete,
+    upsertArrayItem: s.upsertArrayItem,
+    deleteArrayItem: s.deleteArrayItem,
+    updateSettings: s.updateSettings,
+    runQuickScenario: s.runQuickScenario,
   }));
 }
 
