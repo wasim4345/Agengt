@@ -43,6 +43,7 @@ npm run start:static
 | M0 Scaffold (tokens, UI primitives, formatters) | Done |
 | M1 Store & seed | Done |
 | M2 Shell & roles | Done |
-| M3+ Rules, modules | Not started |
+| M3 Rules & selectors | Done |
+| M4+ Data Manager, modules | Not started |
 
 Blueprint source of truth lives in the Project store under `docs/prototype-blueprint/`.
