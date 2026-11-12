@@ -416,17 +416,36 @@ export type OsStore = {
 };
 
 let persistTimer: ReturnType<typeof setTimeout> | null = null;
+let pendingPersist: AppState | null = null;
+let pendingOnQuota: (() => void) | null = null;
 
 function schedulePersist(state: AppState, onQuota: () => void) {
   if (typeof window === "undefined") return;
+  pendingPersist = state;
+  pendingOnQuota = onQuota;
   if (persistTimer) clearTimeout(persistTimer);
   persistTimer = setTimeout(() => {
-    try {
-      writePersistedState(state);
-    } catch {
-      onQuota();
-    }
+    flushPersist();
   }, 300);
+}
+
+/** Flush debounced persistence immediately (used by e2e bridge). */
+export function flushPersist(): void {
+  if (typeof window === "undefined") return;
+  if (persistTimer) {
+    clearTimeout(persistTimer);
+    persistTimer = null;
+  }
+  if (!pendingPersist) return;
+  const state = pendingPersist;
+  const onQuota = pendingOnQuota;
+  pendingPersist = null;
+  pendingOnQuota = null;
+  try {
+    writePersistedState(state);
+  } catch {
+    onQuota?.();
+  }
 }
 
 function newId(prefix: string): string {
