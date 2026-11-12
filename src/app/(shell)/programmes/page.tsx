@@ -2,7 +2,7 @@
 
 import { RoleGate } from "@/components/RoleGate";
 import { PageHeader } from "@/components/layout/PageHeader";
-import { Badge, Card, CardContent } from "@/components/ui";
+import { Badge, Button, Card, CardContent } from "@/components/ui";
 import { formatINR } from "@/lib/format/inr";
 import { useOsStore } from "@/store/store";
 
@@ -19,7 +19,19 @@ export default function ProgrammesPage() {
     <RoleGate allow={["leadership", "programme_manager", "finance"]}>
       <PageHeader
         title={role === "programme_manager" ? "My programmes" : "Programmes"}
-        description="Live programme list from the central store."
+        description="Open a programme for budget, structure, or continue a draft wizard."
+        actions={
+          role === "programme_manager" ? (
+            <Button
+              size="sm"
+              onClick={() => {
+                window.location.href = "/programmes/new/";
+              }}
+            >
+              New programme
+            </Button>
+          ) : null
+        }
       />
       <div className="flex flex-col gap-2">
         {programmes.map((p) => (
@@ -31,7 +43,22 @@ export default function ProgrammesPage() {
                 </p>
                 <p className="text-xs text-muted">{formatINR(p.totalBudget)}</p>
               </div>
-              <Badge tone="in-progress">{p.status}</Badge>
+              <div className="flex items-center gap-2">
+                <Badge tone="in-progress">{p.status}</Badge>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => {
+                    if (p.status === "draft" && p.wizardDraft) {
+                      window.location.href = `/programmes/new/?id=${p.id}`;
+                    } else {
+                      window.location.href = `/programmes/view/?id=${p.id}`;
+                    }
+                  }}
+                >
+                  {p.status === "draft" && p.wizardDraft ? "Continue" : "Open"}
+                </Button>
+              </div>
             </CardContent>
           </Card>
         ))}
