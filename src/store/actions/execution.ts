@@ -15,6 +15,10 @@ import {
 } from "@/lib/rules/report";
 import { validateExpenseEntry } from "@/lib/rules/expense";
 import { computeDelayImpact } from "@/lib/rules/dependencies";
+import {
+  canReportOnProgramme,
+  canSoftDeleteEvidence,
+} from "@/lib/rules/lifecycle";
 import { FILE_SIZE_CAP_BYTES } from "@/store/files";
 
 function nid(prefix: string): string {
@@ -48,6 +52,8 @@ export function applyStartReport(
   if (!activity || activity.programmeId !== input.programmeId) {
     return err({ code: "ACT_MISSING", message: "Activity not found" });
   }
+  const reportOk = canReportOnProgramme(draft, input.programmeId);
+  if (!reportOk.ok && !draft.meta.allowRuleBreaking) return reportOk;
   if (input.type === "final") {
     const check = canStartFinalReport(draft, input.activityId);
     if (!check.ok) return check;
@@ -505,14 +511,31 @@ export function applySoftDeleteEvidence(
   evidenceId: ID,
   reason: string,
 ): Result<true> {
+  const check = canSoftDeleteEvidence(draft, evidenceId);
+  if (!check.ok && !draft.meta.allowRuleBreaking) return check;
   const evidence = draft.evidence[evidenceId];
   if (!evidence) {
     return err({ code: "EVID_MISSING", message: "Evidence not found" });
   }
+  const linkedReport = evidence.reportId
+    ? draft.reports[evidence.reportId]
+    : undefined;
+  const afterSubmit =
+    linkedReport &&
+    (linkedReport.status === "submitted" ||
+      linkedReport.status === "released" ||
+      linkedReport.versions.length > 0);
+  if (afterSubmit && !reason.trim()) {
+    return err({
+      code: "EVID_DELETE_REASON",
+      message: "Reason is required to soft-delete evidence after submit.",
+      field: "reason",
+    });
+  }
   evidence.deleted = {
     by: draft.meta.currentUserId,
     at: `${draft.meta.demoDate}T12:00:00.000Z`,
-    reason: reason || "Removed",
+    reason: reason.trim() || "Removed",
   };
   return ok(true);
 }

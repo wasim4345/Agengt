@@ -96,8 +96,26 @@ import {
   applyVerifyExpense,
   applyWithdrawBudgetRevision,
 } from "./actions/finance";
+import {
+  applyDecideLifecycle,
+  applyMarkProgrammeCompletedIfReady,
+  applyReplaceManager,
+  applyRequestCancellation,
+  applyRequestClosure,
+  applyRequestExtension,
+  applyRequestHold,
+  applyRequestResume,
+} from "./actions/lifecycle";
+import {
+  applyDeleteAchievement,
+  applySetAchievementApproval,
+  applySetProgrammeStartup,
+  applyUpsertAchievement,
+  applyUpsertStartup,
+} from "./actions/startups";
 import type { RevisionLine } from "@/lib/rules/budget";
 import { closureChecks } from "@/lib/rules/closure";
+import type { Achievement, ProgrammeStartup } from "@/types/domain";
 
 enablePatches();
 
@@ -109,6 +127,8 @@ export type OsStore = {
   snapshots: SnapshotRecord[];
   lastUndo: UndoEntry | null;
   quotaError: boolean;
+  /** Case 10: another tab wrote state */
+  crossTabWarning: boolean;
 
   hydrate: () => void;
   undo: () => Result<true>;
@@ -335,6 +355,64 @@ export type OsStore = {
   ) => Result<true>;
   withdrawBudgetRevision: (revisionId: ID) => Result<true>;
   checkClosure: (programmeId: ID) => Result<{ ready: boolean; issues: string[] }>;
+
+  /** M11 lifecycle */
+  requestHold: (programmeId: ID, reason: string) => Result<{ approvalId: ID }>;
+  requestResume: (programmeId: ID, reason: string) => Result<{ approvalId: ID }>;
+  requestExtension: (
+    programmeId: ID,
+    newEndDate: ISODate,
+    reason: string,
+  ) => Result<{ approvalId: ID }>;
+  requestCancellation: (
+    programmeId: ID,
+    reason: string,
+  ) => Result<{ approvalId: ID }>;
+  requestClosure: (
+    programmeId: ID,
+    reason?: string,
+  ) => Result<{ approvalId: ID }>;
+  decideLifecycle: (
+    approvalId: ID,
+    input: { approved: boolean; remarks?: string },
+  ) => Result<{ approvalId: ID }>;
+  replaceManager: (programmeId: ID, newManagerId: ID) => Result<true>;
+  markProgrammeCompletedIfReady: (
+    programmeId: ID,
+  ) => Result<{ completed: boolean }>;
+  clearCrossTabWarning: () => void;
+
+  /** Startups & achievements */
+  upsertStartup: (input: {
+    id?: ID;
+    name: string;
+    sector: string;
+    city?: string;
+    founders?: string;
+    website?: string;
+  }) => Result<{ startupId: ID }>;
+  setProgrammeStartup: (input: {
+    programmeId: ID;
+    startupId: ID;
+    status: ProgrammeStartup["status"];
+  }) => Result<true>;
+  upsertAchievement: (input: {
+    id?: ID;
+    startupId: ID;
+    programmeId: ID;
+    title: string;
+    description: string;
+    date: string;
+    type: Achievement["type"];
+    marcomApproved?: boolean;
+    clientApproved?: boolean;
+  }) => Result<{ achievementId: ID }>;
+  setAchievementApproval: (
+    achievementId: ID,
+    audience: "marcom" | "client",
+    approved: boolean,
+  ) => Result<true>;
+  deleteAchievement: (achievementId: ID) => Result<true>;
 };
 
 let persistTimer: ReturnType<typeof setTimeout> | null = null;
@@ -508,6 +586,7 @@ export const useOsStore = create<OsStore>((set, get) => {
     snapshots: [],
     lastUndo: null,
     quotaError: false,
+    crossTabWarning: false,
 
     hydrate: () => {
       if (get().hydrated) return;
@@ -523,8 +602,9 @@ export const useOsStore = create<OsStore>((set, get) => {
         window.addEventListener("storage", (event) => {
           if (event.key !== "iimcip-os:v1:state" || !event.newValue) return;
           try {
-            const next = migrate(JSON.parse(event.newValue) as unknown);
-            set({ state: next });
+            migrate(JSON.parse(event.newValue) as unknown);
+            // Case 10: warn rather than silently overwriting in-flight edits
+            set({ crossTabWarning: true });
           } catch {
             // ignore corrupt cross-tab payloads
           }
@@ -1474,6 +1554,175 @@ export const useOsStore = create<OsStore>((set, get) => {
       const state = get().state;
       return ok(closureChecks(state, programmeId));
     },
+
+    requestHold: (programmeId, reason) =>
+      runMutation(
+        "requestHold",
+        (draft) => applyRequestHold(draft, programmeId, reason),
+        {
+          entity: "Approval",
+          entityId: programmeId,
+          action: "requestHold",
+          summary: `Requested hold for ${programmeId}`,
+          programmeId,
+        },
+      ),
+
+    requestResume: (programmeId, reason) =>
+      runMutation(
+        "requestResume",
+        (draft) => applyRequestResume(draft, programmeId, reason),
+        {
+          entity: "Approval",
+          entityId: programmeId,
+          action: "requestResume",
+          summary: `Requested resume for ${programmeId}`,
+          programmeId,
+        },
+      ),
+
+    requestExtension: (programmeId, newEndDate, reason) =>
+      runMutation(
+        "requestExtension",
+        (draft) =>
+          applyRequestExtension(draft, programmeId, newEndDate, reason),
+        {
+          entity: "Approval",
+          entityId: programmeId,
+          action: "requestExtension",
+          summary: `Requested extension of ${programmeId} to ${newEndDate}`,
+          programmeId,
+        },
+      ),
+
+    requestCancellation: (programmeId, reason) =>
+      runMutation(
+        "requestCancellation",
+        (draft) => applyRequestCancellation(draft, programmeId, reason),
+        {
+          entity: "Approval",
+          entityId: programmeId,
+          action: "requestCancellation",
+          summary: `Cancellation for ${programmeId}`,
+          programmeId,
+        },
+      ),
+
+    requestClosure: (programmeId, reason) =>
+      runMutation(
+        "requestClosure",
+        (draft) => applyRequestClosure(draft, programmeId, reason),
+        {
+          entity: "Approval",
+          entityId: programmeId,
+          action: "requestClosure",
+          summary: `Requested closure for ${programmeId}`,
+          programmeId,
+        },
+      ),
+
+    decideLifecycle: (approvalId, input) =>
+      runMutation(
+        "decideLifecycle",
+        (draft) => applyDecideLifecycle(draft, approvalId, input),
+        {
+          entity: "Approval",
+          entityId: approvalId,
+          action: "decideLifecycle",
+          summary: `${input.approved ? "Approved" : "Rejected"} lifecycle ${approvalId}`,
+        },
+      ),
+
+    replaceManager: (programmeId, newManagerId) =>
+      runMutation(
+        "replaceManager",
+        (draft) => applyReplaceManager(draft, programmeId, newManagerId),
+        {
+          entity: "Programme",
+          entityId: programmeId,
+          action: "replaceManager",
+          summary: `Replaced manager of ${programmeId}`,
+          programmeId,
+        },
+      ),
+
+    markProgrammeCompletedIfReady: (programmeId) =>
+      runMutation(
+        "markProgrammeCompletedIfReady",
+        (draft) => applyMarkProgrammeCompletedIfReady(draft, programmeId),
+        {
+          entity: "Programme",
+          entityId: programmeId,
+          action: "markProgrammeCompletedIfReady",
+          summary: `Checked completion for ${programmeId}`,
+          programmeId,
+        },
+      ),
+
+    clearCrossTabWarning: () => set({ crossTabWarning: false }),
+
+    upsertStartup: (input) =>
+      runMutation(
+        "upsertStartup",
+        (draft) => applyUpsertStartup(draft, input),
+        {
+          entity: "Startup",
+          entityId: input.id ?? "new",
+          action: "upsertStartup",
+          summary: `Upserted startup ${input.name}`,
+        },
+      ),
+
+    setProgrammeStartup: (input) =>
+      runMutation(
+        "setProgrammeStartup",
+        (draft) => applySetProgrammeStartup(draft, input),
+        {
+          entity: "ProgrammeStartup",
+          entityId: `${input.programmeId}:${input.startupId}`,
+          action: "setProgrammeStartup",
+          summary: `Set startup status ${input.status}`,
+          programmeId: input.programmeId,
+        },
+      ),
+
+    upsertAchievement: (input) =>
+      runMutation(
+        "upsertAchievement",
+        (draft) => applyUpsertAchievement(draft, input),
+        {
+          entity: "Achievement",
+          entityId: input.id ?? "new",
+          action: "upsertAchievement",
+          summary: `Upserted achievement ${input.title}`,
+          programmeId: input.programmeId,
+        },
+      ),
+
+    setAchievementApproval: (achievementId, audience, approved) =>
+      runMutation(
+        "setAchievementApproval",
+        (draft) =>
+          applySetAchievementApproval(draft, achievementId, audience, approved),
+        {
+          entity: "Achievement",
+          entityId: achievementId,
+          action: "setAchievementApproval",
+          summary: `${approved ? "Approved" : "Unapproved"} achievement for ${audience}`,
+        },
+      ),
+
+    deleteAchievement: (achievementId) =>
+      runMutation(
+        "deleteAchievement",
+        (draft) => applyDeleteAchievement(draft, achievementId),
+        {
+          entity: "Achievement",
+          entityId: achievementId,
+          action: "deleteAchievement",
+          summary: `Deleted achievement ${achievementId}`,
+        },
+      ),
   };
 });
 
@@ -1486,6 +1735,7 @@ export function createTestStore(initial?: AppState) {
     snapshots: [],
     lastUndo: null,
     quotaError: false,
+    crossTabWarning: false,
   });
   return useOsStore;
 }

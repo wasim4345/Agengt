@@ -24,13 +24,26 @@ export default function ApprovalsPage() {
   );
   const role = useOsStore((s) => s.state.meta.currentRole);
   const decideActivation = useOsStore((s) => s.decideActivation);
+  const decideLifecycle = useOsStore((s) => s.decideLifecycle);
   const { push } = useToast();
   const [remarks, setRemarks] = useState<Record<string, string>>({});
   const [tab, setTab] = useState<
     "programmes" | "budgets" | "releases" | "closures"
   >("programmes");
 
-  const pending = approvals.filter((a) => a.status === "pending");
+  const lifecycleTypes = new Set([
+    "hold",
+    "resume",
+    "extension",
+    "cancellation",
+    "closure",
+  ]);
+  const pending = approvals.filter(
+    (a) => a.status === "pending" && a.type === "activation",
+  );
+  const pendingLifecycle = approvals.filter(
+    (a) => a.status === "pending" && lifecycleTypes.has(a.type),
+  );
   const decided = approvals.filter((a) => a.status !== "pending");
   const pendingRevisions = budgetRevisions.filter(
     (r) =>
@@ -65,6 +78,9 @@ export default function ApprovalsPage() {
               : ""}
             {key === "programmes" && pending.length
               ? ` (${pending.length})`
+              : ""}
+            {key === "closures" && pendingLifecycle.length
+              ? ` (${pendingLifecycle.length})`
               : ""}
           </Button>
         ))}
@@ -215,10 +231,94 @@ export default function ApprovalsPage() {
       ) : null}
 
       {tab === "closures" ? (
-        <p className="text-sm text-muted">
-          Run Finance closure checks on Budgets, then request Leadership
-          closure in M11.
-        </p>
+        <div className="flex flex-col gap-2">
+          {pendingLifecycle.length === 0 ? (
+            <p className="text-sm text-muted">
+              No pending hold / resume / extension / cancellation / closure
+              requests.
+            </p>
+          ) : (
+            pendingLifecycle.map((a) => (
+              <Card key={a.id}>
+                <CardContent className="flex flex-col gap-3 py-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-medium">
+                        {a.type} ·{" "}
+                        {programmes[a.programmeId]?.code ?? a.programmeId}
+                      </p>
+                      <p className="text-xs text-muted">
+                        {a.reason}
+                        {a.payload?.newEndDate
+                          ? ` → ${a.payload.newEndDate}`
+                          : ""}
+                      </p>
+                    </div>
+                    <Badge tone="at-risk">{a.status}</Badge>
+                  </div>
+                  {role === "leadership" ? (
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
+                      <Field label="Remarks" className="flex-1">
+                        <input
+                          className="w-full rounded-md border border-border bg-surface px-3 py-2 text-sm"
+                          value={remarks[a.id] ?? ""}
+                          onChange={(e) =>
+                            setRemarks((prev) => ({
+                              ...prev,
+                              [a.id]: e.target.value,
+                            }))
+                          }
+                        />
+                      </Field>
+                      <Button
+                        onClick={() => {
+                          const r = decideLifecycle(a.id, { approved: true });
+                          push({
+                            title: r.ok
+                              ? "Approved"
+                              : (r.errors[0]?.message ?? "Failed"),
+                            tone: r.ok ? "success" : "danger",
+                          });
+                        }}
+                      >
+                        Approve
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        onClick={() => {
+                          const text = remarks[a.id]?.trim();
+                          if (!text) {
+                            push({
+                              title: "Remarks required to reject",
+                              tone: "danger",
+                            });
+                            return;
+                          }
+                          const r = decideLifecycle(a.id, {
+                            approved: false,
+                            remarks: text,
+                          });
+                          push({
+                            title: r.ok
+                              ? "Rejected"
+                              : (r.errors[0]?.message ?? "Failed"),
+                            tone: r.ok ? "success" : "danger",
+                          });
+                        }}
+                      >
+                        Reject
+                      </Button>
+                    </div>
+                  ) : (
+                    <p className="text-xs text-muted">
+                      Leadership decides lifecycle requests.
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+            ))
+          )}
+        </div>
       ) : null}
     </RoleGate>
   );
