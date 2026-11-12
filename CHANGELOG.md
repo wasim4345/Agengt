@@ -1,5 +1,15 @@
 # Changelog
 
+## M1 — Store & seed (2026-11-12)
+
+- Domain types from doc 03 in `src/types/domain.ts`
+- Zustand + immer store with `Result<T>` actions, activity log + notifications
+- localStorage persistence (debounced), snapshot storage, cross-tab sync, hydration gate
+- IndexedDB file blob helpers (`src/store/files.ts`) and schema migrations
+- Undo via immer patches (last mutation)
+- Full default seed (doc 06 §4) plus healthy / troubled / empty scenarios; Reset / Clear
+- `selectors/finance.ts` money maths and `selectors/integrity.ts` all-green on default seed
+
 ## M0 — Scaffold (2026-11-12)
 
 - Next.js App Router with static export, TypeScript strict, Tailwind, ESLint
