@@ -31,6 +31,7 @@ export function ExpenseTable({
   const addExpense = useOsStore((s) => s.addExpense);
   const deleteExpense = useOsStore((s) => s.deleteExpense);
   const resubmitExpense = useOsStore((s) => s.resubmitExpense);
+  const submitExpense = useOsStore((s) => s.submitExpense);
   const { push } = useToast();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({
@@ -109,16 +110,33 @@ export function ExpenseTable({
                 </TD>
                 <TD>
                   {e.status === "draft" ? (
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => {
-                        deleteExpense(e.id);
-                        push({ title: "Expense deleted", tone: "success" });
-                      }}
-                    >
-                      Delete
-                    </Button>
+                    <div className="flex gap-1">
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => {
+                          const r = submitExpense(e.id);
+                          push({
+                            title: r.ok
+                              ? "Submitted to Finance"
+                              : (r.errors[0]?.message ?? "Failed"),
+                            tone: r.ok ? "success" : "danger",
+                          });
+                        }}
+                      >
+                        Submit
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => {
+                          deleteExpense(e.id);
+                          push({ title: "Expense deleted", tone: "success" });
+                        }}
+                      >
+                        Delete
+                      </Button>
+                    </div>
                   ) : null}
                   {e.status === "rejected" ? (
                     <Button
