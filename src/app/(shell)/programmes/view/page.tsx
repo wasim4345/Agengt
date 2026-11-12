@@ -4,6 +4,7 @@ import { Suspense, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { RoleGate } from "@/components/RoleGate";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { GanttChart } from "@/components/gantt";
 import { ActivityBuilder } from "@/components/programme/ActivityBuilder";
 import { AllocationGrid } from "@/components/programme/AllocationGrid";
 import { DependencyEditor } from "@/components/programme/DependencyEditor";
@@ -76,6 +77,7 @@ function ProgrammeViewInner() {
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="activities">Activities</TabsTrigger>
+          <TabsTrigger value="timeline">Timeline</TabsTrigger>
           <TabsTrigger value="deps">Dependencies</TabsTrigger>
           <TabsTrigger value="budget">Budget</TabsTrigger>
           <TabsTrigger value="template">Save as template</TabsTrigger>
@@ -108,6 +110,10 @@ function ProgrammeViewInner() {
               </CardContent>
             </Card>
           )}
+        </TabsContent>
+
+        <TabsContent value="timeline" className="mt-4">
+          <GanttChart programmeId={id} />
         </TabsContent>
 
         <TabsContent value="deps" className="mt-4 space-y-6">

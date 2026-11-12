@@ -64,6 +64,12 @@ import {
   applySaveProgrammeAsTemplate,
   applyUpdateTemplate,
 } from "./actions/templates";
+import {
+  applyImpactProposals,
+  applyNudgeActivity,
+  applyRescheduleActivity,
+  dismissImpactProposals,
+} from "./actions/gantt";
 
 enablePatches();
 
@@ -205,6 +211,31 @@ export type OsStore = {
     programmeId: ID,
     name: string,
   ) => Result<{ templateId: ID }>;
+
+  /** M6 Gantt */
+  rescheduleActivity: (
+    activityId: ID,
+    plannedStart: ISODate,
+    plannedEnd: ISODate,
+  ) => Result<{
+    impacts: import("@/lib/rules/dependencies").ImpactProposal[];
+    scheduleViolations: number;
+  }>;
+  nudgeActivity: (
+    activityId: ID,
+    days: number,
+  ) => Result<{
+    impacts: import("@/lib/rules/dependencies").ImpactProposal[];
+    scheduleViolations: number;
+  }>;
+  applyImpacts: (
+    sourceActivityId: ID,
+    mode?: "all" | ID[],
+  ) => Result<number>;
+  dismissImpacts: (
+    sourceActivityId: ID,
+    mode?: "all" | ID[],
+  ) => Result<number>;
 };
 
 let persistTimer: ReturnType<typeof setTimeout> | null = null;
@@ -1046,6 +1077,55 @@ export const useOsStore = create<OsStore>((set, get) => {
           action: "saveProgrammeAsTemplate",
           summary: `Saved programme as template “${name}”`,
           programmeId,
+        },
+      ),
+
+    rescheduleActivity: (activityId, plannedStart, plannedEnd) =>
+      runMutation(
+        "rescheduleActivity",
+        (draft) =>
+          applyRescheduleActivity(draft, activityId, plannedStart, plannedEnd),
+        {
+          entity: "Activity",
+          entityId: activityId,
+          action: "rescheduleActivity",
+          summary: `Rescheduled ${activityId} to ${plannedStart}→${plannedEnd}`,
+        },
+      ),
+
+    nudgeActivity: (activityId, days) =>
+      runMutation(
+        "nudgeActivity",
+        (draft) => applyNudgeActivity(draft, activityId, days),
+        {
+          entity: "Activity",
+          entityId: activityId,
+          action: "nudgeActivity",
+          summary: `Nudged ${activityId} by ${days}d`,
+        },
+      ),
+
+    applyImpacts: (sourceActivityId, mode = "all") =>
+      runMutation(
+        "applyImpacts",
+        (draft) => applyImpactProposals(draft, sourceActivityId, mode),
+        {
+          entity: "DelayImpact",
+          entityId: sourceActivityId,
+          action: "applyImpacts",
+          summary: `Applied downstream shifts from ${sourceActivityId}`,
+        },
+      ),
+
+    dismissImpacts: (sourceActivityId, mode = "all") =>
+      runMutation(
+        "dismissImpacts",
+        (draft) => dismissImpactProposals(draft, sourceActivityId, mode),
+        {
+          entity: "DelayImpact",
+          entityId: sourceActivityId,
+          action: "dismissImpacts",
+          summary: `Dismissed downstream shifts from ${sourceActivityId}`,
         },
       ),
   };
