@@ -101,3 +101,38 @@ body {
   outline: 2px solid var(--color-ring);
   outline-offset: 2px;
 }
+
+/* Reports centre — print to PDF (A4), hide chrome */
+@media print {
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+
+  html,
+  body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+
+  .print\:hidden {
+    display: none !important;
+  }
+
+  .report-paper {
+    max-width: none !important;
+    width: 100% !important;
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+  }
+
+  .report-paper table {
+    page-break-inside: auto;
+  }
+
+  .report-paper tr {
+    page-break-inside: avoid;
+  }
+}
