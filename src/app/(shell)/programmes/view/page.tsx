@@ -8,6 +8,7 @@ import { GanttChart } from "@/components/gantt";
 import { ActivityBuilder } from "@/components/programme/ActivityBuilder";
 import { AllocationGrid } from "@/components/programme/AllocationGrid";
 import { DependencyEditor } from "@/components/programme/DependencyEditor";
+import { LifecyclePanel } from "@/components/programme/LifecyclePanel";
 import { MilestoneEditor } from "@/components/programme/MilestoneEditor";
 import {
   Badge,
@@ -80,6 +81,7 @@ function ProgrammeViewInner() {
           <TabsTrigger value="timeline">Timeline</TabsTrigger>
           <TabsTrigger value="deps">Dependencies</TabsTrigger>
           <TabsTrigger value="budget">Budget</TabsTrigger>
+          <TabsTrigger value="lifecycle">Lifecycle</TabsTrigger>
           <TabsTrigger value="template">Save as template</TabsTrigger>
         </TabsList>
 
@@ -150,6 +152,10 @@ function ProgrammeViewInner() {
 
         <TabsContent value="budget" className="mt-4">
           <AllocationGrid programmeId={id} />
+        </TabsContent>
+
+        <TabsContent value="lifecycle" className="mt-4">
+          <LifecyclePanel programmeId={id} />
         </TabsContent>
 
         <TabsContent value="template" className="mt-4">

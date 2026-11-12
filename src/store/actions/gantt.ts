@@ -65,6 +65,15 @@ export function applyRescheduleActivity(
       field: "plannedEnd",
     });
   }
+  // Case 1: beyond programme end → block with extension message
+  if (dayDiff(plannedEnd, programme.endDate) < 0) {
+    return err({
+      code: "ACT_BEYOND_PRG",
+      message:
+        "Activity ends after the programme end. Request an extension or shorten the activity.",
+      field: "plannedEnd",
+    });
+  }
 
   activity.plannedStart = plannedStart;
   activity.plannedEnd = plannedEnd;

@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import { Banner } from "./Banner";
+import { CrossTabWarning } from "./CrossTabWarning";
 import { Header } from "./Header";
 import { Sidebar } from "./Sidebar";
 
@@ -10,6 +11,7 @@ export function Shell({ children }: { children: ReactNode }) {
     <div className="flex min-h-screen flex-col bg-background">
       <div className="print:hidden">
         <Header />
+        <CrossTabWarning />
         <Banner />
       </div>
       <div className="flex min-h-0 flex-1">
