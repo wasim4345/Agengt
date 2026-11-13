@@ -6,6 +6,7 @@ import { RoleGate } from "@/components/RoleGate";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { ProgrammeWizard } from "@/components/programme/ProgrammeWizard";
 import { Button, Skeleton, useToast } from "@/components/ui";
+import { navigate } from "@/lib/basePath";
 import { useOsStore } from "@/store/store";
 import type { ID } from "@/types/domain";
 
@@ -80,7 +81,7 @@ export default function NewProgrammePage() {
             variant="secondary"
             size="sm"
             onClick={() => {
-              window.location.href = "/templates/";
+              navigate("/templates/");
             }}
           >
             Template library

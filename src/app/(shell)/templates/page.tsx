@@ -14,6 +14,7 @@ import {
   Field,
   useToast,
 } from "@/components/ui";
+import { navigate } from "@/lib/basePath";
 import { flushPersist, useOsStore } from "@/store/store";
 import type { ID, Template } from "@/types/domain";
 
@@ -55,7 +56,7 @@ export default function TemplatesPage() {
     }
     // Persist before full navigation so the draft survives reload
     flushPersist();
-    window.location.href = `/programmes/new/?id=${created.data.programmeId}`;
+    navigate(`/programmes/new/?id=${created.data.programmeId}`);
   }
 
   return (

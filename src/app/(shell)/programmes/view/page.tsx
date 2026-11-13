@@ -25,6 +25,7 @@ import {
   useToast,
 } from "@/components/ui";
 import { formatINR } from "@/lib/format/inr";
+import { navigate } from "@/lib/basePath";
 import { useOsStore } from "@/store/store";
 import * as kpiSel from "@/selectors/kpi";
 
@@ -114,7 +115,7 @@ function ProgrammeViewInner() {
             size="sm"
             variant="secondary"
             onClick={() => {
-              window.location.href = `/programmes/new/?id=${programme.id}`;
+              navigate(`/programmes/new/?id=${programme.id}`);
             }}
           >
             Continue wizard
@@ -169,7 +170,7 @@ function ProgrammeViewInner() {
                       <Button
                         size="sm"
                         onClick={() => {
-                          window.location.href = `/programmes/activity/?programmeId=${id}&activityId=${a.id}`;
+                          navigate(`/programmes/activity/?programmeId=${id}&activityId=${a.id}`);
                         }}
                       >
                         Open workspace
@@ -227,7 +228,7 @@ function ProgrammeViewInner() {
                       title: `Saved template ${r.data.templateId}`,
                       tone: "success",
                     });
-                    window.location.href = "/templates/";
+                    navigate("/templates/");
                   } else {
                     push({
                       title: r.errors[0]?.message ?? "Save failed",

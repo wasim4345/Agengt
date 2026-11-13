@@ -28,6 +28,16 @@ npm run build
 npm run start:static
 ```
 
+## GitHub Pages
+
+The app is a static export and deploys via `.github/workflows/deploy-pages.yml` to:
+
+**https://wasim4345.github.io/Agengt/**
+
+One-time setup (repo owner): **Settings → Pages → Build and deployment → Source: GitHub Actions**.
+
+Builds set `NEXT_PUBLIC_BASE_PATH=/Agengt` so assets and in-app navigations work under the project subpath. Local/dev builds leave the base path empty.
+
 ## Verify (gates)
 
 ```bash

@@ -44,6 +44,7 @@ import {
 import * as leadership from "@/selectors/leadership";
 import type { LeadershipFilters } from "@/selectors/leadership";
 import * as kpiSel from "@/selectors/kpi";
+import { navigate } from "@/lib/basePath";
 import { useOsStore } from "@/store/store";
 import type { ProgrammeStatus, SponsorType } from "@/types/domain";
 import { IDS } from "@/seed/ids";
@@ -163,7 +164,7 @@ function LeadershipInner() {
             size="sm"
             variant="secondary"
             onClick={() => {
-              window.location.href = "/reports/?preset=board_pack";
+              navigate("/reports/?preset=board_pack");
             }}
           >
             {boardView ? "Open Board Pack" : "Export to Reports"}
@@ -557,7 +558,7 @@ function LeadershipInner() {
                     key={r.id}
                     className="cursor-pointer hover:bg-background"
                     onClick={() => {
-                      window.location.href = `/programmes/view/?id=${r.id}`;
+                      navigate(`/programmes/view/?id=${r.id}`);
                     }}
                   >
                     <TD className="font-mono text-xs">{r.code}</TD>
@@ -659,7 +660,7 @@ function LeadershipInner() {
                   type="button"
                   className="flex items-start justify-between gap-2 text-left text-sm hover:underline"
                   onClick={() => {
-                    if (a.link) window.location.href = a.link;
+                    if (a.link) navigate(a.link);
                   }}
                 >
                   <span>{a.text}</span>
