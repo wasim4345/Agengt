@@ -32,8 +32,13 @@ export function closureChecks(
     (a) => a.programmeId === programmeId && !TERMINAL.has(a.status),
   );
   if (openActivities.length > 0) {
+    const partial = openActivities.filter(
+      (a) => a.status === "partially_completed",
+    ).length;
     issues.push(
-      `${openActivities.length} activity(ies) not completed or cancelled`,
+      partial > 0
+        ? `${openActivities.length} activity(ies) not completed or cancelled (${partial} partially completed must be resolved)`
+        : `${openActivities.length} activity(ies) not completed or cancelled`,
     );
   }
 
