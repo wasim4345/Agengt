@@ -3,12 +3,17 @@
 import { create } from "zustand";
 import { applyPatches, enablePatches, produceWithPatches, type Patch } from "immer";
 import type {
+  Activity,
   AppState,
+  DepType,
   ID,
   ISODate,
+  Milestone,
+  Programme,
   Role,
   ScenarioName,
   SnapshotRecord,
+  Template,
 } from "@/types/domain";
 import { DEFAULT_DEMO_DATE } from "@/types/domain";
 import { buildDefaultSeed, buildScenario } from "@/seed";
@@ -30,6 +35,35 @@ import {
 } from "./actions/meta";
 import { validateEntityUpsert } from "./actions/dataValidation";
 import { applyQuickScenario } from "./actions/scenarios";
+import {
+  applyActivateDemo,
+  applyAddActivity,
+  applyAddDependency,
+  applyAddMilestone,
+  applyBulkAssignOwner,
+  applyBulkShiftDates,
+  applyCreateProgrammeDraft,
+  applyDecideActivation,
+  applyDeleteActivity,
+  applyDeleteDependency,
+  applyDeleteMilestone,
+  applyDuplicateActivity,
+  applyReorderActivity,
+  applySetActivityBudgetAmount,
+  applySetActivityMilestones,
+  applySetWizardStep,
+  applySubmitProgramme,
+  applyTemplateToProgramme,
+  applyUpdateActivity,
+  applyUpdateMilestone,
+  applyUpdateProgramme,
+} from "./actions/programme";
+import {
+  applyDeleteTemplate,
+  applyDuplicateTemplate,
+  applySaveProgrammeAsTemplate,
+  applyUpdateTemplate,
+} from "./actions/templates";
 
 enablePatches();
 
@@ -87,6 +121,90 @@ export type OsStore = {
       | "release_latest"
       | "add_startup_win",
   ) => Result<string>;
+
+  /** M5 programme wizard & templates */
+  createProgrammeDraft: (input?: {
+    name?: string;
+    categoryId?: ID;
+    clientId?: ID;
+    startDate?: ISODate;
+    endDate?: ISODate;
+    totalBudget?: number;
+  }) => Result<{ programmeId: ID }>;
+  updateProgramme: (
+    programmeId: ID,
+    patch: Partial<Programme>,
+  ) => Result<Programme>;
+  setWizardStep: (programmeId: ID, step: number) => Result<number>;
+  applyTemplate: (
+    programmeId: ID,
+    templateId: ID | null,
+  ) => Result<{ activityCount: number }>;
+  addActivity: (
+    programmeId: ID,
+    partial?: Partial<Activity> & { budget?: number },
+  ) => Result<{ activityId: ID }>;
+  updateActivity: (
+    activityId: ID,
+    patch: Partial<Activity>,
+  ) => Result<Activity>;
+  deleteActivity: (activityId: ID, cascade?: boolean) => Result<true>;
+  duplicateActivity: (activityId: ID) => Result<{ activityId: ID }>;
+  reorderActivity: (
+    activityId: ID,
+    direction: "up" | "down",
+  ) => Result<true>;
+  bulkShiftDates: (activityIds: ID[], days: number) => Result<number>;
+  bulkAssignOwner: (activityIds: ID[], ownerId: ID) => Result<number>;
+  addDependency: (input: {
+    programmeId: ID;
+    successorId: ID;
+    predecessorId?: ID;
+    predecessorMilestoneId?: ID;
+    type?: DepType;
+    lagDays?: number;
+  }) => Result<{ dependencyId: ID }>;
+  deleteDependency: (dependencyId: ID) => Result<true>;
+  addMilestone: (
+    programmeId: ID,
+    input?: Partial<Milestone> & { gatingActivityIds?: ID[] },
+  ) => Result<{ milestoneId: ID }>;
+  updateMilestone: (
+    milestoneId: ID,
+    patch: Partial<Milestone>,
+  ) => Result<Milestone>;
+  deleteMilestone: (milestoneId: ID) => Result<true>;
+  setActivityMilestones: (
+    activityId: ID,
+    milestoneIds: ID[],
+  ) => Result<true>;
+  setActivityBudgetAmount: (
+    activityId: ID,
+    amount: number,
+  ) => Result<true>;
+  submitProgramme: (
+    programmeId: ID,
+    options?: { acknowledgeUnallocated?: boolean },
+  ) => Result<{ approvalId: ID }>;
+  decideActivation: (
+    approvalId: ID,
+    decision: "approved" | "rejected",
+    remarks?: string,
+  ) => Result<true>;
+  activateDemo: (
+    programmeId: ID,
+    options?: { acknowledgeUnallocated?: boolean },
+  ) => Result<true>;
+  duplicateTemplate: (templateId: ID) => Result<{ templateId: ID }>;
+  updateTemplate: (
+    templateId: ID,
+    patch: Partial<Template>,
+  ) => Result<Template>;
+  deleteTemplate: (templateId: ID) => Result<true>;
+  saveProgrammeAsTemplate: (
+    programmeId: ID,
+    name: string,
+  ) => Result<{ templateId: ID }>;
 };
 
 let persistTimer: ReturnType<typeof setTimeout> | null = null;
@@ -614,6 +732,320 @@ export const useOsStore = create<OsStore>((set, get) => {
           action: "runQuickScenario",
           summary: `Quick scenario: ${name}`,
           notify: `Applied quick scenario “${name}”`,
+        },
+      ),
+
+    createProgrammeDraft: (input) =>
+      runMutation(
+        "createProgrammeDraft",
+        (draft) => applyCreateProgrammeDraft(draft, input),
+        {
+          entity: "Programme",
+          entityId: "new",
+          action: "createProgrammeDraft",
+          summary: "Created programme draft",
+        },
+      ),
+
+    updateProgramme: (programmeId, patch) =>
+      runMutation(
+        "updateProgramme",
+        (draft) => applyUpdateProgramme(draft, programmeId, patch),
+        {
+          entity: "Programme",
+          entityId: programmeId,
+          action: "updateProgramme",
+          summary: `Updated programme ${programmeId}`,
+          programmeId,
+        },
+      ),
+
+    setWizardStep: (programmeId, step) =>
+      runMutation(
+        "setWizardStep",
+        (draft) => applySetWizardStep(draft, programmeId, step),
+        {
+          entity: "Programme",
+          entityId: programmeId,
+          action: "setWizardStep",
+          summary: `Wizard step ${step}`,
+          programmeId,
+        },
+      ),
+
+    applyTemplate: (programmeId, templateId) =>
+      runMutation(
+        "applyTemplate",
+        (draft) => applyTemplateToProgramme(draft, programmeId, templateId),
+        {
+          entity: "Programme",
+          entityId: programmeId,
+          action: "applyTemplate",
+          summary: templateId
+            ? `Applied template ${templateId}`
+            : "Cleared template (blank)",
+          programmeId,
+        },
+      ),
+
+    addActivity: (programmeId, partial) =>
+      runMutation(
+        "addActivity",
+        (draft) => applyAddActivity(draft, programmeId, partial),
+        {
+          entity: "Activity",
+          entityId: programmeId,
+          action: "addActivity",
+          summary: "Added activity block",
+          programmeId,
+        },
+      ),
+
+    updateActivity: (activityId, patch) =>
+      runMutation(
+        "updateActivity",
+        (draft) => applyUpdateActivity(draft, activityId, patch),
+        {
+          entity: "Activity",
+          entityId: activityId,
+          action: "updateActivity",
+          summary: `Updated activity ${activityId}`,
+        },
+      ),
+
+    deleteActivity: (activityId, cascade) =>
+      runMutation(
+        "deleteActivity",
+        (draft) => applyDeleteActivity(draft, activityId, cascade),
+        {
+          entity: "Activity",
+          entityId: activityId,
+          action: "deleteActivity",
+          summary: `Deleted activity ${activityId}`,
+        },
+      ),
+
+    duplicateActivity: (activityId) =>
+      runMutation(
+        "duplicateActivity",
+        (draft) => applyDuplicateActivity(draft, activityId),
+        {
+          entity: "Activity",
+          entityId: activityId,
+          action: "duplicateActivity",
+          summary: `Duplicated activity ${activityId}`,
+        },
+      ),
+
+    reorderActivity: (activityId, direction) =>
+      runMutation(
+        "reorderActivity",
+        (draft) => applyReorderActivity(draft, activityId, direction),
+        {
+          entity: "Activity",
+          entityId: activityId,
+          action: "reorderActivity",
+          summary: `Reordered activity ${direction}`,
+        },
+      ),
+
+    bulkShiftDates: (activityIds, days) =>
+      runMutation(
+        "bulkShiftDates",
+        (draft) => applyBulkShiftDates(draft, activityIds, days),
+        {
+          entity: "Activity",
+          entityId: "bulk",
+          action: "bulkShiftDates",
+          summary: `Shifted ${activityIds.length} activities by ${days}d`,
+        },
+      ),
+
+    bulkAssignOwner: (activityIds, ownerId) =>
+      runMutation(
+        "bulkAssignOwner",
+        (draft) => applyBulkAssignOwner(draft, activityIds, ownerId),
+        {
+          entity: "Activity",
+          entityId: "bulk",
+          action: "bulkAssignOwner",
+          summary: `Assigned owner to ${activityIds.length} activities`,
+        },
+      ),
+
+    addDependency: (input) =>
+      runMutation(
+        "addDependency",
+        (draft) => applyAddDependency(draft, input),
+        {
+          entity: "Dependency",
+          entityId: input.programmeId,
+          action: "addDependency",
+          summary: "Added dependency",
+          programmeId: input.programmeId,
+        },
+      ),
+
+    deleteDependency: (dependencyId) =>
+      runMutation(
+        "deleteDependency",
+        (draft) => applyDeleteDependency(draft, dependencyId),
+        {
+          entity: "Dependency",
+          entityId: dependencyId,
+          action: "deleteDependency",
+          summary: `Deleted dependency ${dependencyId}`,
+        },
+      ),
+
+    addMilestone: (programmeId, input) =>
+      runMutation(
+        "addMilestone",
+        (draft) => applyAddMilestone(draft, programmeId, input),
+        {
+          entity: "Milestone",
+          entityId: programmeId,
+          action: "addMilestone",
+          summary: "Added milestone",
+          programmeId,
+        },
+      ),
+
+    updateMilestone: (milestoneId, patch) =>
+      runMutation(
+        "updateMilestone",
+        (draft) => applyUpdateMilestone(draft, milestoneId, patch),
+        {
+          entity: "Milestone",
+          entityId: milestoneId,
+          action: "updateMilestone",
+          summary: `Updated milestone ${milestoneId}`,
+        },
+      ),
+
+    deleteMilestone: (milestoneId) =>
+      runMutation(
+        "deleteMilestone",
+        (draft) => applyDeleteMilestone(draft, milestoneId),
+        {
+          entity: "Milestone",
+          entityId: milestoneId,
+          action: "deleteMilestone",
+          summary: `Deleted milestone ${milestoneId}`,
+        },
+      ),
+
+    setActivityMilestones: (activityId, milestoneIds) =>
+      runMutation(
+        "setActivityMilestones",
+        (draft) => applySetActivityMilestones(draft, activityId, milestoneIds),
+        {
+          entity: "Activity",
+          entityId: activityId,
+          action: "setActivityMilestones",
+          summary: "Updated activity milestones",
+        },
+      ),
+
+    setActivityBudgetAmount: (activityId, amount) =>
+      runMutation(
+        "setActivityBudgetAmount",
+        (draft) => applySetActivityBudgetAmount(draft, activityId, amount),
+        {
+          entity: "ActivityBudget",
+          entityId: activityId,
+          action: "setActivityBudgetAmount",
+          summary: `Set budget for ${activityId}`,
+        },
+      ),
+
+    submitProgramme: (programmeId, options) =>
+      runMutation(
+        "submitProgramme",
+        (draft) => applySubmitProgramme(draft, programmeId, options),
+        {
+          entity: "Programme",
+          entityId: programmeId,
+          action: "submitProgramme",
+          summary: `Submitted programme ${programmeId} for approval`,
+          programmeId,
+          notify: "Programme submitted for Leadership approval",
+        },
+      ),
+
+    decideActivation: (approvalId, decision, remarks) =>
+      runMutation(
+        "decideActivation",
+        (draft) =>
+          applyDecideActivation(draft, approvalId, decision, remarks),
+        {
+          entity: "Approval",
+          entityId: approvalId,
+          action: "decideActivation",
+          summary: `Activation ${decision}`,
+          notify: `Programme activation ${decision}`,
+        },
+      ),
+
+    activateDemo: (programmeId, options) =>
+      runMutation(
+        "activateDemo",
+        (draft) => applyActivateDemo(draft, programmeId, options),
+        {
+          entity: "Programme",
+          entityId: programmeId,
+          action: "activateDemo",
+          summary: `Activated programme ${programmeId} (demo)`,
+          programmeId,
+        },
+      ),
+
+    duplicateTemplate: (templateId) =>
+      runMutation(
+        "duplicateTemplate",
+        (draft) => applyDuplicateTemplate(draft, templateId),
+        {
+          entity: "Template",
+          entityId: templateId,
+          action: "duplicateTemplate",
+          summary: `Duplicated template ${templateId}`,
+        },
+      ),
+
+    updateTemplate: (templateId, patch) =>
+      runMutation(
+        "updateTemplate",
+        (draft) => applyUpdateTemplate(draft, templateId, patch),
+        {
+          entity: "Template",
+          entityId: templateId,
+          action: "updateTemplate",
+          summary: `Updated template ${templateId}`,
+        },
+      ),
+
+    deleteTemplate: (templateId) =>
+      runMutation(
+        "deleteTemplate",
+        (draft) => applyDeleteTemplate(draft, templateId),
+        {
+          entity: "Template",
+          entityId: templateId,
+          action: "deleteTemplate",
+          summary: `Deleted template ${templateId}`,
+        },
+      ),
+
+    saveProgrammeAsTemplate: (programmeId, name) =>
+      runMutation(
+        "saveProgrammeAsTemplate",
+        (draft) => applySaveProgrammeAsTemplate(draft, programmeId, name),
+        {
+          entity: "Template",
+          entityId: programmeId,
+          action: "saveProgrammeAsTemplate",
+          summary: `Saved programme as template “${name}”`,
+          programmeId,
         },
       ),
   };
