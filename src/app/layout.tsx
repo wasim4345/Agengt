@@ -6,6 +6,10 @@ export const metadata: Metadata = {
   title: "IIMCIP · Programme OS",
   description:
     "Interactive programme management prototype for IIMCIP leadership.",
+  icons: {
+    icon: "/brand/iimcip-mark.png",
+    apple: "/brand/iimcip-mark.png",
+  },
 };
 
 export default function RootLayout({
