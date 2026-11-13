@@ -1,5 +1,12 @@
 # Changelog
 
+## M3 — Rules & selectors (2026-11-12)
+
+- `lib/rules`: dependencies (cycle/schedule/impact), programme validation (E/W), report validation (RPT_*), budget, expense
+- `selectors/*`: core, finance, leadership, manager, client, marcom, financeRole, reports, integrity
+- `useRoleSelectors` role-scoped surface; client/MarCom leak guards
+- Exhaustive unit tests; coverage ≥90% on `lib/rules` + `selectors` (npm test runs with coverage thresholds)
+
 ## M2 — Shell & roles (2026-11-12)
 
 - App shell: Header, Sidebar, Banner, Demo clock, Role/Persona switchers, Notifications bell, global programme search
