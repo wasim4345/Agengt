@@ -4,6 +4,7 @@ import { RoleGate } from "@/components/RoleGate";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Badge, Button, Card, CardContent } from "@/components/ui";
 import { formatINR } from "@/lib/format/inr";
+import { navigate } from "@/lib/basePath";
 import { useOsStore } from "@/store/store";
 
 export default function ProgrammesPage() {
@@ -25,7 +26,7 @@ export default function ProgrammesPage() {
             <Button
               size="sm"
               onClick={() => {
-                window.location.href = "/programmes/new/";
+                navigate("/programmes/new/");
               }}
             >
               New programme
@@ -50,9 +51,9 @@ export default function ProgrammesPage() {
                   variant="secondary"
                   onClick={() => {
                     if (p.status === "draft" && p.wizardDraft) {
-                      window.location.href = `/programmes/new/?id=${p.id}`;
+                      navigate(`/programmes/new/?id=${p.id}`);
                     } else {
-                      window.location.href = `/programmes/view/?id=${p.id}`;
+                      navigate(`/programmes/view/?id=${p.id}`);
                     }
                   }}
                 >

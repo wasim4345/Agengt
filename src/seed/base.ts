@@ -5,6 +5,7 @@ import {
 } from "@/types/domain";
 import { buildActivityCategories, buildCategories, buildExpenseCategories } from "./categories";
 import { buildClients } from "./clients";
+import { buildOffices } from "./offices";
 import { buildTemplates } from "./templates";
 import { buildUsers } from "./users";
 import { IDS } from "./ids";
@@ -15,13 +16,14 @@ export function buildDirectory(demoDate: ISODate = DEFAULT_DEMO_DATE): Pick<
   | "meta"
   | "users"
   | "clients"
+  | "offices"
   | "categories"
   | "activityCategories"
   | "expenseCategories"
   | "templates"
 > {
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     meta: {
       demoDate,
       currentRole: "leadership" as Role,
@@ -38,6 +40,7 @@ export function buildDirectory(demoDate: ISODate = DEFAULT_DEMO_DATE): Pick<
     },
     users: buildUsers(),
     clients: buildClients(),
+    offices: buildOffices(),
     categories: buildCategories(),
     activityCategories: buildActivityCategories(),
     expenseCategories: buildExpenseCategories(),
@@ -60,6 +63,7 @@ export function emptyBusinessCollections(): Pick<
   | "startups"
   | "programmeStartups"
   | "achievements"
+  | "kpis"
   | "approvals"
   | "delayImpacts"
   | "notifications"
@@ -79,6 +83,7 @@ export function emptyBusinessCollections(): Pick<
     startups: {},
     programmeStartups: [],
     achievements: {},
+    kpis: {},
     approvals: {},
     delayImpacts: {},
     notifications: {},

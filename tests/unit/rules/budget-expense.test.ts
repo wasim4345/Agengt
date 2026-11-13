@@ -17,9 +17,9 @@ import {
 describe("budget rules (§5)", () => {
   it("allows draft budget edits within headroom and blocks active direct edits", () => {
     const state = buildDefaultSeed("2026-11-12");
-    expect(canSetActivityBudget(state, "act_p5_a01", 2_00_000).ok).toBe(true);
+    expect(canSetActivityBudget(state, "act_p7_a01", 2_00_000).ok).toBe(true);
     expect(canSetActivityBudget(state, "act_p1_a01", 10_000).ok).toBe(false);
-    expect(canSetProgrammeBudget(state, "prg_p5", 40_00_000).ok).toBe(true);
+    expect(canSetProgrammeBudget(state, "prg_p7", 40_00_000).ok).toBe(true);
     expect(canSetProgrammeBudget(state, "prg_p1", 10_00_000).ok).toBe(false);
   });
 
@@ -70,8 +70,8 @@ describe("expense rules (§4.1–4.2)", () => {
 
   it("blocks verify beyond allocation and requires reject remarks", () => {
     const state = buildDefaultSeed("2026-11-12");
-    // exp_p2_02 is submitted with overspend on corporate pilots
-    const verify = canVerifyExpense(state, "exp_p2_02");
+    // submitted grant exceeds remaining headroom on Seed Disbursement Tranche 1
+    const verify = canVerifyExpense(state, "exp_p2_overspend");
     expect(verify.ok).toBe(false);
     if (!verify.ok) expect(verify.errors[0]?.code).toBe("EXP_VERIFY_OVER");
 

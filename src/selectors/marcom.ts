@@ -33,7 +33,8 @@ export function upcoming(state: AppState) {
     .filter(
       (a) =>
         a.categoryId === "acat_events" ||
-        a.categoryId === "acat_networking" ||
+        a.categoryId === "acat_market" ||
+        a.categoryId === "acat_investor" ||
         a.categoryId === "acat_outreach",
     )
     .map((a) => ({
@@ -53,7 +54,8 @@ export function eventsConducted(state: AppState) {
     .filter(
       (a) =>
         (a.categoryId === "acat_events" ||
-          a.categoryId === "acat_networking") &&
+          a.categoryId === "acat_market" ||
+          a.categoryId === "acat_investor") &&
         a.status === "completed",
     )
     .map((a) => ({

@@ -25,6 +25,7 @@ import { formatINR } from "@/lib/format/inr";
 import { formatDate } from "@/lib/format/dates";
 import { IDS } from "@/seed/ids";
 import * as manager from "@/selectors/manager";
+import { navigate } from "@/lib/basePath";
 import { useOsStore } from "@/store/store";
 
 export function ManagerDashboard() {
@@ -54,7 +55,7 @@ export function ManagerDashboard() {
             <Button
               size="sm"
               onClick={() => {
-                window.location.href = "/programmes/new/";
+                navigate("/programmes/new/");
               }}
             >
               New programme
@@ -63,7 +64,7 @@ export function ManagerDashboard() {
               size="sm"
               variant="secondary"
               onClick={() => {
-                window.location.href = "/programmes/";
+                navigate("/programmes/");
               }}
             >
               Report activity
@@ -80,7 +81,7 @@ export function ManagerDashboard() {
             <Button
               size="sm"
               onClick={() => {
-                window.location.href = "/programmes/new/";
+                navigate("/programmes/new/");
               }}
             >
               New programme
@@ -115,7 +116,7 @@ export function ManagerDashboard() {
                   size="sm"
                   variant="secondary"
                   onClick={() => {
-                    window.location.href = `/programmes/view/?id=${row.programme.id}`;
+                    navigate(`/programmes/view/?id=${row.programme.id}`);
                   }}
                 >
                   Open
@@ -167,7 +168,7 @@ export function ManagerDashboard() {
                   <Button
                     size="sm"
                     onClick={() => {
-                      window.location.href = `/programmes/activity/?programmeId=${a.programmeId}&activityId=${a.id}`;
+                      navigate(`/programmes/activity/?programmeId=${a.programmeId}&activityId=${a.id}`);
                     }}
                   >
                     Report now
@@ -191,7 +192,7 @@ export function ManagerDashboard() {
             </p>
             <Button
               onClick={() => {
-                window.location.href = `/programmes/activity/?programmeId=${IDS.programmes.p1}&activityId=act_p1_a02`;
+                navigate(`/programmes/activity/?programmeId=${IDS.programmes.p1}&activityId=act_p1_a02`);
               }}
             >
               Open Outreach Sessions
@@ -255,7 +256,7 @@ export function ManagerDashboard() {
                     size="sm"
                     variant="ghost"
                     onClick={() => {
-                      window.location.href = `/programmes/activity/?programmeId=${a.programmeId}&activityId=${a.id}`;
+                      navigate(`/programmes/activity/?programmeId=${a.programmeId}&activityId=${a.id}`);
                     }}
                   >
                     Workspace

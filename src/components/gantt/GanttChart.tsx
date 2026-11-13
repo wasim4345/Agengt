@@ -22,6 +22,7 @@ import {
   wouldCreateCycle,
 } from "@/lib/rules/dependencies";
 import { collectUpstreamDownstream } from "@/store/actions/gantt";
+import { navigate } from "@/lib/basePath";
 import { useOsStore } from "@/store/store";
 import type { DepType, ID, ISODate } from "@/types/domain";
 import { ImpactPanel } from "./ImpactPanel";
@@ -610,7 +611,7 @@ export function GanttChart({
                           setSelectedId(a.id);
                         }}
                         onDoubleClick={() => {
-                          window.location.href = `/programmes/activity/?programmeId=${programmeId}&activityId=${a.id}`;
+                          navigate(`/programmes/activity/?programmeId=${programmeId}&activityId=${a.id}`);
                         }}
                         onContextMenu={(ev) => {
                           ev.preventDefault();
@@ -805,7 +806,7 @@ export function GanttChart({
             type="button"
             className="block w-full px-3 py-1.5 text-left text-sm hover:bg-background"
             onClick={() => {
-              window.location.href = `/programmes/activity/?programmeId=${programmeId}&activityId=${menu.activityId}`;
+              navigate(`/programmes/activity/?programmeId=${programmeId}&activityId=${menu.activityId}`);
               setMenu(null);
             }}
           >

@@ -239,6 +239,49 @@ export function ReportForm({
               />
             </Field>
           </div>
+          {Object.values(state.kpis).some(
+            (k) => k.programmeId === report.programmeId,
+          ) ? (
+            <div className="rounded-lg border border-border p-3">
+              <p className="mb-2 text-sm font-medium">
+                Key metrics this period
+              </p>
+              <div className="grid gap-2 sm:grid-cols-2">
+                {Object.values(state.kpis)
+                  .filter((k) => k.programmeId === report.programmeId)
+                  .sort((a, b) => a.sortOrder - b.sortOrder)
+                  .map((kpi) => {
+                    const current =
+                      content.kpiValues?.find((v) => v.kpiId === kpi.id)
+                        ?.value ?? "";
+                    return (
+                      <Field key={kpi.id} label={`${kpi.name} (${kpi.unit})`}>
+                        <input
+                          disabled={readOnly}
+                          type="number"
+                          className="w-full rounded-md border border-border bg-surface px-3 py-2 text-sm"
+                          value={current}
+                          onChange={(e) => {
+                            const value = e.target.value
+                              ? Number(e.target.value)
+                              : undefined;
+                            const rest = (content.kpiValues ?? []).filter(
+                              (v) => v.kpiId !== kpi.id,
+                            );
+                            patch({
+                              kpiValues:
+                                value === undefined
+                                  ? rest
+                                  : [...rest, { kpiId: kpi.id, value }],
+                            });
+                          }}
+                        />
+                      </Field>
+                    );
+                  })}
+              </div>
+            </div>
+          ) : null}
           <Field label="Client summary (visible after release)">
             <textarea
               disabled={readOnly}

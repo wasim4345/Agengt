@@ -28,6 +28,22 @@ npm run build
 npm run start:static
 ```
 
+## GitHub Pages
+
+The app is a static export and deploys via `.github/workflows/deploy-pages.yml` to:
+
+**https://wasim4345.github.io/Agengt/**
+
+### One-time setup (repo owner)
+
+1. **Settings → Pages → Build and deployment**
+   - Preferred: **Source: Deploy from a branch** → Branch **`gh-pages`** / **`/`** (root)  
+     The workflow always publishes the static `out/` folder to `gh-pages`.
+   - Or: **Source: GitHub Actions**, then open **Settings → Environments → github-pages → Deployment branches** and set **All branches** (or allow `main` plus this tip branch). The Actions deploy job is blocked if only `main` is listed while building from a feature branch.
+2. Push (or re-run the workflow). Site URL: https://wasim4345.github.io/Agengt/
+
+Builds set `NEXT_PUBLIC_BASE_PATH=/Agengt` so assets and in-app navigations work under the project subpath. Local/dev builds leave the base path empty.
+
 ## Verify (gates)
 
 ```bash

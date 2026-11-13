@@ -47,7 +47,7 @@ describe("Data Manager store actions", () => {
 
     const add = store.getState().rawUpsert("clients", id, stub);
     expect(add.ok).toBe(true);
-    expect(store.getState().state.clients[id]?.name).toBe("New client");
+    expect(store.getState().state.clients[id]?.name).toBe("New sponsor");
 
     const edited = { ...stub, name: "Edited client" };
     const edit = store.getState().rawUpsert("clients", id, edited);

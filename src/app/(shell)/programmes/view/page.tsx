@@ -10,6 +10,7 @@ import { AllocationGrid } from "@/components/programme/AllocationGrid";
 import { DependencyEditor } from "@/components/programme/DependencyEditor";
 import { LifecyclePanel } from "@/components/programme/LifecyclePanel";
 import { MilestoneEditor } from "@/components/programme/MilestoneEditor";
+import { StageRibbon } from "@/components/programme/StageRibbon";
 import {
   Badge,
   Button,
@@ -24,7 +25,9 @@ import {
   useToast,
 } from "@/components/ui";
 import { formatINR } from "@/lib/format/inr";
+import { navigate } from "@/lib/basePath";
 import { useOsStore } from "@/store/store";
+import * as kpiSel from "@/selectors/kpi";
 
 function ProgrammeViewInner() {
   const search = useSearchParams();
@@ -41,6 +44,13 @@ function ProgrammeViewInner() {
         .length,
     [state.activities, id],
   );
+  const category = programme
+    ? state.categories[programme.categoryId]
+    : undefined;
+  const office = programme?.officeId
+    ? state.offices[programme.officeId]
+    : undefined;
+  const kpiRows = programme ? kpiSel.achieved(state, programme.id) : [];
 
   if (!id || !programme) {
     return (
@@ -56,9 +66,48 @@ function ProgrammeViewInner() {
     <>
       <PageHeader
         title={`${programme.code} · ${programme.name}`}
-        description={`${programme.startDate} → ${programme.endDate} · ${formatINR(programme.totalBudget)}`}
+        description={`${programme.startDate} → ${programme.endDate} · ${formatINR(programme.totalBudget)}${
+          office ? ` · ${office.name}, ${office.state}` : ""
+        }`}
         actions={<Badge tone="in-progress">{programme.status}</Badge>}
       />
+
+      <div className="mb-4 flex flex-wrap items-center gap-3">
+        <StageRibbon stage={category?.stage} />
+        {office ? (
+          <Badge tone="neutral" data-testid="office-badge">
+            {office.name} · {office.state}
+          </Badge>
+        ) : null}
+        {state.clients[programme.clientId] ? (
+          <Badge tone="neutral">
+            Sponsor: {state.clients[programme.clientId]!.name} (
+            {state.clients[programme.clientId]!.type})
+          </Badge>
+        ) : null}
+      </div>
+
+      {kpiRows.length > 0 ? (
+        <Card className="mb-4">
+          <CardContent className="grid gap-2 py-3 sm:grid-cols-2 lg:grid-cols-3">
+            {kpiRows.map((row) => (
+              <div key={row.kpi.id}>
+                <p className="text-xs text-muted">{row.kpi.name}</p>
+                <p className="text-sm font-medium">
+                  {kpiSel.formatKpiValue(row.kpi.unit, row.achieved)}
+                  <span className="font-normal text-muted">
+                    {" "}
+                    / {kpiSel.formatKpiValue(row.kpi.unit, row.kpi.target)}
+                  </span>
+                </p>
+                {row.fromSubmittedUnreleased > 0 ? (
+                  <p className="text-[11px] text-muted">incl. unreleased</p>
+                ) : null}
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      ) : null}
 
       {programme.status === "draft" ? (
         <div className="mb-4">
@@ -66,7 +115,7 @@ function ProgrammeViewInner() {
             size="sm"
             variant="secondary"
             onClick={() => {
-              window.location.href = `/programmes/new/?id=${programme.id}`;
+              navigate(`/programmes/new/?id=${programme.id}`);
             }}
           >
             Continue wizard
@@ -121,7 +170,7 @@ function ProgrammeViewInner() {
                       <Button
                         size="sm"
                         onClick={() => {
-                          window.location.href = `/programmes/activity/?programmeId=${id}&activityId=${a.id}`;
+                          navigate(`/programmes/activity/?programmeId=${id}&activityId=${a.id}`);
                         }}
                       >
                         Open workspace
@@ -179,7 +228,7 @@ function ProgrammeViewInner() {
                       title: `Saved template ${r.data.templateId}`,
                       tone: "success",
                     });
-                    window.location.href = "/templates/";
+                    navigate("/templates/");
                   } else {
                     push({
                       title: r.errors[0]?.message ?? "Save failed",
