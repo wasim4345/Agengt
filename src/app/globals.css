@@ -102,6 +102,43 @@ body {
   outline-offset: 2px;
 }
 
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 100;
+  border-radius: var(--radius-control);
+  background: var(--color-primary);
+  color: var(--color-primary-foreground);
+  padding: 0.5rem 0.75rem;
+  text-decoration: none;
+}
+
+.skip-link:focus,
+.skip-link:focus-visible {
+  left: 1rem;
+  top: 1rem;
+}
+
+/* Comfortable reading width on narrow viewports */
+@media (max-width: 768px) {
+  .page-stack {
+    gap: 0.75rem;
+  }
+}
+
 /* Reports centre — print to PDF (A4), hide chrome */
 @media print {
   @page {

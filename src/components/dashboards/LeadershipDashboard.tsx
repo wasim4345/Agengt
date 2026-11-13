@@ -50,13 +50,15 @@ function Kpi({
   label,
   value,
   sub,
+  testId,
 }: {
   label: string;
   value: string;
   sub?: string;
+  testId?: string;
 }) {
   return (
-    <Card>
+    <Card data-testid={testId}>
       <CardHeader className="pb-2">
         <p className="text-xs text-muted">{label}</p>
         <CardTitle className="text-lg">{value}</CardTitle>
@@ -162,6 +164,7 @@ function LeadershipInner() {
         <CardContent className="flex flex-wrap items-end gap-3 py-3">
           <Field label="Category" className="min-w-[10rem]">
             <select
+              data-testid="filter-category"
               className="w-full rounded-md border border-border bg-surface px-3 py-2 text-sm"
               value={filters.categoryId ?? ""}
               onChange={(e) =>
@@ -274,16 +277,29 @@ function LeadershipInner() {
         </CardContent>
       </Card>
 
-      <div className="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <Kpi label="Total programmes" value={String(kpis.totalProgrammes)} />
+      <div
+        className="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4"
+        data-testid="leadership-kpis"
+      >
+        <Kpi
+          testId="kpi-total-programmes"
+          label="Total programmes"
+          value={String(kpis.totalProgrammes)}
+        />
         <Kpi label="Active" value={String(kpis.active)} />
         <Kpi label="Completed" value={String(kpis.completed)} />
         <Kpi
+          testId="kpi-delayed"
           label="Delayed activities"
           value={String(kpis.delayedActivities)}
         />
-        <Kpi label="Total budget" value={formatINR(kpis.totalBudget)} />
         <Kpi
+          testId="kpi-total-budget"
+          label="Total budget"
+          value={formatINR(kpis.totalBudget)}
+        />
+        <Kpi
+          testId="kpi-verified"
           label="Verified expenditure"
           value={formatINR(kpis.verifiedExpenditure)}
           sub={`Reported ${formatINR(kpis.reportedExpenditure)}`}

@@ -1,6 +1,14 @@
 "use client";
 
-import { useId, type InputHTMLAttributes, type ReactNode } from "react";
+import {
+  Children,
+  cloneElement,
+  isValidElement,
+  useId,
+  type InputHTMLAttributes,
+  type ReactElement,
+  type ReactNode,
+} from "react";
 import { cn } from "@/lib/cn";
 
 export type FieldProps = {
@@ -32,18 +40,19 @@ export function Field({
       ? `${fieldId}-hint`
       : undefined;
 
-  return (
-    <div className={cn("flex flex-col gap-1.5", className)}>
-      <label htmlFor={fieldId} className="text-sm font-medium text-foreground">
-        {label}
-        {required ? (
-          <span className="text-danger" aria-hidden>
-            {" "}
-            *
-          </span>
-        ) : null}
-      </label>
-      {children ?? (
+  const control = children
+    ? Children.map(children, (child) => {
+        if (!isValidElement(child)) return child;
+        return cloneElement(
+          child as ReactElement<Record<string, unknown>>,
+          {
+            id: (child.props as { id?: string }).id ?? fieldId,
+            "aria-invalid": Boolean(error) || undefined,
+            "aria-describedby": describedBy,
+          },
+        );
+      })
+    : (
         <input
           id={fieldId}
           aria-invalid={Boolean(error) || undefined}
@@ -55,7 +64,20 @@ export function Field({
           )}
           {...inputProps}
         />
-      )}
+      );
+
+  return (
+    <div className={cn("flex flex-col gap-1.5", className)}>
+      <label htmlFor={fieldId} className="text-sm font-medium text-foreground">
+        {label}
+        {required ? (
+          <span className="text-danger" aria-hidden>
+            {" "}
+            *
+          </span>
+        ) : null}
+      </label>
+      {control}
       {error ? (
         <p id={`${fieldId}-error`} className="text-xs text-danger" role="alert">
           {error}
