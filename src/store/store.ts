@@ -88,6 +88,16 @@ import {
   applySubmitReport,
   applyUpdateExpense,
 } from "./actions/execution";
+import {
+  applyDecideBudgetRevision,
+  applyRejectExpense,
+  applyRequestBudgetRevision,
+  applySubmitExpense,
+  applyVerifyExpense,
+  applyWithdrawBudgetRevision,
+} from "./actions/finance";
+import type { RevisionLine } from "@/lib/rules/budget";
+import { closureChecks } from "@/lib/rules/closure";
 
 enablePatches();
 
@@ -304,6 +314,27 @@ export type OsStore = {
     approved: boolean,
   ) => Result<true>;
   softDeleteEvidence: (evidenceId: ID, reason: string) => Result<true>;
+
+  /** M8 finance */
+  submitExpense: (expenseId: ID) => Result<true>;
+  verifyExpense: (
+    expenseId: ID,
+    opts?: { verifiedAmount?: number; remarks?: string },
+  ) => Result<true>;
+  rejectExpense: (expenseId: ID, remarks: string) => Result<true>;
+  requestBudgetRevision: (input: {
+    programmeId: ID;
+    kind: "reallocation" | "total_change" | "activity_change";
+    reason: string;
+    lines: RevisionLine[];
+    totalAfter: number;
+  }) => Result<{ revisionId: ID }>;
+  decideBudgetRevision: (
+    revisionId: ID,
+    input: { approved: boolean; remarks?: string },
+  ) => Result<true>;
+  withdrawBudgetRevision: (revisionId: ID) => Result<true>;
+  checkClosure: (programmeId: ID) => Result<{ ready: boolean; issues: string[] }>;
 };
 
 let persistTimer: ReturnType<typeof setTimeout> | null = null;
@@ -1358,6 +1389,91 @@ export const useOsStore = create<OsStore>((set, get) => {
           summary: `Soft-deleted evidence ${evidenceId}`,
         },
       ),
+
+    submitExpense: (expenseId) =>
+      runMutation(
+        "submitExpense",
+        (draft) => applySubmitExpense(draft, expenseId),
+        {
+          entity: "Expense",
+          entityId: expenseId,
+          action: "submitExpense",
+          summary: `Submitted expense ${expenseId}`,
+          notify: "Expense submitted for Finance verification",
+        },
+      ),
+
+    verifyExpense: (expenseId, opts) =>
+      runMutation(
+        "verifyExpense",
+        (draft) => applyVerifyExpense(draft, expenseId, opts),
+        {
+          entity: "Expense",
+          entityId: expenseId,
+          action: "verifyExpense",
+          summary: `Verified expense ${expenseId}`,
+          notify: "Expense verified",
+        },
+      ),
+
+    rejectExpense: (expenseId, remarks) =>
+      runMutation(
+        "rejectExpense",
+        (draft) => applyRejectExpense(draft, expenseId, remarks),
+        {
+          entity: "Expense",
+          entityId: expenseId,
+          action: "rejectExpense",
+          summary: `Rejected expense ${expenseId}`,
+          notify: "Expense rejected — resubmit required",
+        },
+      ),
+
+    requestBudgetRevision: (input) =>
+      runMutation(
+        "requestBudgetRevision",
+        (draft) => applyRequestBudgetRevision(draft, input),
+        {
+          entity: "BudgetRevision",
+          entityId: input.programmeId,
+          action: "requestBudgetRevision",
+          summary: `Requested ${input.kind} for ${input.programmeId}`,
+          programmeId: input.programmeId,
+          notify: "Budget revision awaiting Finance",
+        },
+      ),
+
+    decideBudgetRevision: (revisionId, input) =>
+      runMutation(
+        "decideBudgetRevision",
+        (draft) => applyDecideBudgetRevision(draft, revisionId, input),
+        {
+          entity: "BudgetRevision",
+          entityId: revisionId,
+          action: "decideBudgetRevision",
+          summary: `${input.approved ? "Approved" : "Rejected"} revision ${revisionId}`,
+          notify: input.approved
+            ? "Budget revision approved"
+            : "Budget revision rejected",
+        },
+      ),
+
+    withdrawBudgetRevision: (revisionId) =>
+      runMutation(
+        "withdrawBudgetRevision",
+        (draft) => applyWithdrawBudgetRevision(draft, revisionId),
+        {
+          entity: "BudgetRevision",
+          entityId: revisionId,
+          action: "withdrawBudgetRevision",
+          summary: `Withdrew revision ${revisionId}`,
+        },
+      ),
+
+    checkClosure: (programmeId) => {
+      const state = get().state;
+      return ok(closureChecks(state, programmeId));
+    },
   };
 });
 

@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { ReallocationModal } from "@/components/finance/ReallocationModal";
+import { RevisionHistory } from "@/components/finance/RevisionHistory";
 import {
   Badge,
   Button,
@@ -18,7 +20,7 @@ import {
   useToast,
 } from "@/components/ui";
 import { formatINR } from "@/lib/format/inr";
-import { programmeFinancials } from "@/selectors/finance";
+import { activityFinancials, programmeFinancials } from "@/selectors/finance";
 import { useOsStore } from "@/store/store";
 import type { ID } from "@/types/domain";
 
@@ -28,6 +30,7 @@ export function AllocationGrid({ programmeId }: { programmeId: ID }) {
   const updateProgramme = useOsStore((s) => s.updateProgramme);
   const { push } = useToast();
   const [errorById, setErrorById] = useState<Record<string, string>>({});
+  const [reallocOpen, setReallocOpen] = useState(false);
 
   const programme = state.programmes[programmeId];
   if (!programme) return null;
@@ -37,6 +40,7 @@ export function AllocationGrid({ programmeId }: { programmeId: ID }) {
     .sort((a, b) => a.sortOrder - b.sortOrder);
   const fin = programmeFinancials(state, programmeId);
   const editable = programme.status === "draft";
+  const active = programme.status === "active" || programme.status === "on_hold";
 
   return (
     <div className="flex flex-col gap-4">
@@ -95,25 +99,39 @@ export function AllocationGrid({ programmeId }: { programmeId: ID }) {
             </Badge>
           </div>
         </CardContent>
+        {active ? (
+          <CardContent className="pt-0">
+            <Button size="sm" onClick={() => setReallocOpen(true)}>
+              Reallocate…
+            </Button>
+          </CardContent>
+        ) : null}
       </Card>
 
       <Table>
         <THead>
           <TR>
             <TH>Activity</TH>
+            <TH>Original</TH>
             <TH>Revised</TH>
-            <TH>% of total</TH>
+            <TH>Reported</TH>
+            <TH>Verified</TH>
+            <TH>Pending</TH>
+            <TH>Alert</TH>
             <TH />
           </TR>
         </THead>
         <TBody>
           {activities.map((a) => {
             const revised = state.activityBudgets[a.id]?.revised ?? 0;
+            const original = state.activityBudgets[a.id]?.original ?? 0;
+            const af = activityFinancials(state, a.id);
             return (
               <TR key={a.id}>
                 <TD>
                   <span className="font-mono text-xs">{a.code}</span> {a.name}
                 </TD>
+                <TD>{formatINR(original)}</TD>
                 <TD className="min-w-[10rem]">
                   {editable ? (
                     <div className="flex flex-col gap-1">
@@ -131,7 +149,9 @@ export function AllocationGrid({ programmeId }: { programmeId: ID }) {
                               [a.id]: r.errors[0]?.message ?? "Blocked",
                             }));
                             push({
-                              title: r.errors[0]?.message ?? "Over-allocation blocked",
+                              title:
+                                r.errors[0]?.message ??
+                                "Over-allocation blocked",
                               tone: "danger",
                             });
                           } else {
@@ -151,10 +171,21 @@ export function AllocationGrid({ programmeId }: { programmeId: ID }) {
                     formatINR(revised)
                   )}
                 </TD>
+                <TD>{formatINR(af.reported)}</TD>
+                <TD>{formatINR(af.verified)}</TD>
+                <TD>{formatINR(af.pending)}</TD>
                 <TD>
-                  {programme.totalBudget
-                    ? `${((revised / programme.totalBudget) * 100).toFixed(1)}%`
-                    : "—"}
+                  <Badge
+                    tone={
+                      af.alert === "breach"
+                        ? "danger"
+                        : af.alert === "warning"
+                          ? "warning"
+                          : "neutral"
+                    }
+                  >
+                    {af.alert}
+                  </Badge>
                 </TD>
                 <TD>
                   {editable ? (
@@ -162,7 +193,10 @@ export function AllocationGrid({ programmeId }: { programmeId: ID }) {
                       size="sm"
                       variant="ghost"
                       onClick={() => {
-                        const r = setActivityBudgetAmount(a.id, revised + 1_00_000);
+                        const r = setActivityBudgetAmount(
+                          a.id,
+                          revised + 1_00_000,
+                        );
                         if (!r.ok) {
                           push({
                             title: r.errors[0]?.message ?? "Blocked",
@@ -180,6 +214,23 @@ export function AllocationGrid({ programmeId }: { programmeId: ID }) {
           })}
         </TBody>
       </Table>
+
+      {active ? (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">Revision history</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <RevisionHistory programmeId={programmeId} />
+          </CardContent>
+        </Card>
+      ) : null}
+
+      <ReallocationModal
+        programmeId={programmeId}
+        open={reallocOpen}
+        onClose={() => setReallocOpen(false)}
+      />
     </div>
   );
 }
