@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { RoleGate } from "@/components/RoleGate";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { RevisionHistory } from "@/components/finance/RevisionHistory";
@@ -17,10 +17,13 @@ import { formatINR } from "@/lib/format/inr";
 import { useOsStore } from "@/store/store";
 
 export default function ApprovalsPage() {
-  const approvals = useOsStore((s) => Object.values(s.state.approvals));
+  const approvalMap = useOsStore((s) => s.state.approvals);
+  const approvals = useMemo(() => Object.values(approvalMap), [approvalMap]);
   const programmes = useOsStore((s) => s.state.programmes);
-  const budgetRevisions = useOsStore((s) =>
-    Object.values(s.state.budgetRevisions),
+  const revisionMap = useOsStore((s) => s.state.budgetRevisions);
+  const budgetRevisions = useMemo(
+    () => Object.values(revisionMap),
+    [revisionMap],
   );
   const role = useOsStore((s) => s.state.meta.currentRole);
   const decideActivation = useOsStore((s) => s.decideActivation);
