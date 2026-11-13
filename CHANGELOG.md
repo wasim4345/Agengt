@@ -1,5 +1,13 @@
 # Changelog
 
+## M10 — Reports centre (2026-11-12)
+
+- Reports Centre `/reports`: 7 live report previews from `selectors/reports`
+- Parameter bar (programme, date range, sections), A4 paper preview, "Data as of" stamp
+- Export PDF via print stylesheet (`window.print`); CSV download with totals
+- Client-safe *Client Programme Report* on `/reports` and `/client/reports`
+- Tests: demo step 13; CSV totals equal Leadership/Finance dashboard totals
+
 ## M9 — Dashboards (2026-11-12)
 
 - Role dashboards (Leadership / PM / Client / MarCom / Finance) use Recharts + existing selectors; no hard-coded KPI numbers
