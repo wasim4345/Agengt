@@ -24,7 +24,8 @@ export function Banner() {
   return (
     <div className="flex items-center justify-between gap-3 border-b border-border bg-primary/5 px-4 py-2 text-sm">
       <p className="text-foreground">
-        Prototype — simulated role &amp; mock data. Nothing here is real.
+        Prototype — illustrative mock data. Programme and sponsor names are
+        real; figures are invented for demo.
       </p>
       <Button
         variant="ghost"

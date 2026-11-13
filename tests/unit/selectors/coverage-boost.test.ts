@@ -9,6 +9,7 @@ import * as client from "@/selectors/client";
 import * as marcom from "@/selectors/marcom";
 import * as financeRole from "@/selectors/financeRole";
 import * as reports from "@/selectors/reports";
+import * as kpi from "@/selectors/kpi";
 import { runIntegrityChecks, clientSafeReportProjection } from "@/selectors/integrity";
 
 describe("selectors coverage boost", () => {
@@ -63,6 +64,48 @@ describe("selectors coverage boost", () => {
         dateTo: "2099-12-31",
       }).totalProgrammes,
     ).toBe(0);
+    expect(leadership.programmesBySponsorType(state).length).toBeGreaterThan(0);
+    expect(
+      leadership.programmesByOffice(state, { officeId: "off_kolkata" }).length,
+    ).toBeGreaterThan(0);
+    expect(leadership.riskAlerts(state).length).toBeGreaterThan(0);
+  });
+
+  it("covers KPI selectors and portfolio impact strip", () => {
+    const list = kpi.programmeKpis(state, "prg_p1");
+    expect(list.length).toBeGreaterThan(0);
+    expect(kpi.achieved(state, "prg_p1").length).toBe(list.length);
+    expect(kpi.achievedReleased(state, "prg_p1").length).toBe(list.length);
+
+    const withKpi = produce(state, (draft) => {
+      const report = Object.values(draft.reports).find(
+        (r) => r.programmeId === "prg_p1" && r.status === "released",
+      );
+      if (!report || list.length === 0) return;
+      const kpiId = list[0]!.id;
+      const content = {
+        ...report.draft,
+        kpiValues: [{ kpiId, value: 3, note: "seeded for coverage" }],
+      };
+      report.draft = content;
+      if (report.versions.length === 0) {
+        report.versions.push({
+          no: 1,
+          content,
+          expenseIds: [],
+          evidenceIds: [],
+          submittedBy: "usr_arjun",
+          submittedAt: "2026-11-01T12:00:00.000Z",
+        });
+      } else {
+        report.versions[report.versions.length - 1]!.content = content;
+      }
+    });
+    const rows = kpi.achieved(withKpi, "prg_p1");
+    expect(rows.some((r) => r.fromReleased >= 3)).toBe(true);
+    expect(kpi.portfolioImpact(withKpi).length).toBeGreaterThan(0);
+    expect(kpi.formatKpiValue("count", 12.4)).toBe("12");
+    expect(kpi.formatKpiValue("inr", 1_00_000)).toMatch(/₹|INR|1/);
   });
 
   it("covers manager / client / marcom / financeRole leftovers", () => {
@@ -76,17 +119,17 @@ describe("selectors coverage boost", () => {
       draft.programmes.prg_p1!.clientBudgetSummaryVisible = true;
     });
     expect(
-      client.overview(withBudgetFlag, "cli_vanguard")[0],
+      client.overview(withBudgetFlag, "cli_balmer")[0],
     ).toHaveProperty("budgetSummary");
-    expect(client.completedActivities(state, "cli_vanguard").length).toBeGreaterThan(
+    expect(client.completedActivities(state, "cli_balmer").length).toBeGreaterThan(
       0,
     );
-    expect(client.upcoming(state, "cli_vanguard")).toBeTruthy();
+    expect(client.upcoming(state, "cli_balmer")).toBeTruthy();
 
     expect(marcom.eventsConducted(state)).toBeTruthy();
     expect(marcom.milestones(state, "prg_p1").length).toBeGreaterThan(0);
 
-    expect(financeRole.activityAllocations(state, "prg_p2").length).toBe(10);
+    expect(financeRole.activityAllocations(state, "prg_p2").length).toBe(9);
   });
 
   it("covers reports errors and integrity branches", () => {

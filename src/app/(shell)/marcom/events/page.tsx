@@ -11,7 +11,9 @@ export default function MarcomEventsPage() {
     Object.values(s.state.activities).filter(
       (a) =>
         a.categoryId === "acat_events" ||
-        a.categoryId === "acat_networking" ||
+        a.categoryId === "acat_market" ||
+        a.categoryId === "acat_investor" ||
+        a.categoryId === "acat_events" ||
         a.categoryId === "acat_outreach",
     ),
   );

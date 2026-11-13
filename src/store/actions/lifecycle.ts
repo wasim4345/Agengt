@@ -9,6 +9,7 @@ import {
   canRequestResume,
 } from "@/lib/rules/lifecycle";
 import { closureChecks } from "@/lib/rules/closure";
+import { canSelfApprove } from "@/lib/approvals";
 
 function nid(prefix: string): string {
   return `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`;
@@ -134,13 +135,7 @@ export function applyRequestCancellation(
     type: "cancellation",
     reason: reason.trim(),
   });
-  // Leadership may approve immediately in the same turn
-  if (draft.meta.currentRole === "leadership") {
-    return applyDecideLifecycle(draft, approvalId, {
-      approved: true,
-      remarks: reason.trim(),
-    });
-  }
+  // Doc 08 §5b: requester cannot self-approve — other Leadership persona decides.
   return ok({ approvalId });
 }
 
@@ -247,6 +242,8 @@ export function applyDecideLifecycle(
       message: "Only Leadership can decide lifecycle approvals.",
     });
   }
+  const self = canSelfApprove(draft, approval.requestedBy);
+  if (!self.ok && !draft.meta.allowRuleBreaking) return self;
   if (!input.approved && !input.remarks?.trim()) {
     return err({
       code: "APR_REMARKS",

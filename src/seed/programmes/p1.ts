@@ -13,7 +13,7 @@ import {
 import { d, ts } from "../dates";
 import { IDS } from "../ids";
 
-/** Flagship Vanguard Incubation Cohort 5 — doc 06 §4. */
+/** Flagship Balmer Lawrie Startup Fund — doc 08 §4 (keeps 06 demo traps). */
 export function buildP1(demoDate: ISODate): ProgrammePack {
   const pack = emptyMaps();
   const pid = IDS.programmes.p1;
@@ -24,9 +24,10 @@ export function buildP1(demoDate: ISODate): ProgrammePack {
   pack.programmes[pid] = buildProgrammeShell({
     id: pid,
     code: "IIMCIP-INC-2026-001",
-    name: "Vanguard Incubation Cohort 5",
+    name: "Balmer Lawrie Startup Fund",
     categoryId: IDS.categories.incubation,
-    clientId: IDS.clients.vanguard,
+    clientId: IDS.clients.balmer,
+    officeId: IDS.offices.kolkata,
     managerId: owner,
     teamIds: [owner, IDS.users.kavya],
     start: -120,
@@ -37,7 +38,7 @@ export function buildP1(demoDate: ISODate): ProgrammePack {
     createdBy: owner,
     createdFromTemplateId: IDS.templates.incubation,
     objectives:
-      "Incubate a cohort of high-potential startups with structured diagnostics, bootcamps, mentoring and investor readiness.",
+      "Support high-potential startups with structured diagnostics, bootcamps, mentoring, seed support and investor readiness.",
     keyDeliverables: [
       "Selected cohort of startups",
       "Bootcamp completion reports",
@@ -155,7 +156,7 @@ export function buildP1(demoDate: ISODate): ProgrammePack {
       id: "act_p1_a09",
       code: "A09",
       name: "Investor Meet",
-      categoryId: ac.networking,
+      categoryId: ac.investor,
       start: 45,
       end: 60,
       budget: 2_50_000,

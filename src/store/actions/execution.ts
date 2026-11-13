@@ -20,6 +20,7 @@ import {
   canSoftDeleteEvidence,
 } from "@/lib/rules/lifecycle";
 import { FILE_SIZE_CAP_BYTES } from "@/store/files";
+import { currentUserCanApprove } from "@/lib/approvals";
 
 function nid(prefix: string): string {
   return `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`;
@@ -254,6 +255,15 @@ export function applyReleaseReport(
     return err({
       code: "RPT_RELEASE_ROLE",
       message: "Only Leadership can release reports to client.",
+    });
+  }
+  if (
+    !currentUserCanApprove(draft) &&
+    !draft.meta.allowRuleBreaking
+  ) {
+    return err({
+      code: "APR_VIEW_ONLY",
+      message: "This Leadership persona is view-only (canApprove is off).",
     });
   }
 

@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { ReportPaper } from "@/components/reports/ReportPaper";
 import { ExportButtons } from "@/components/reports/ExportButtons";
@@ -31,6 +32,7 @@ export function ReportsCentre({
 }) {
   const state = useOsStore((s) => s.state);
   const role = state.meta.currentRole;
+  const search = useSearchParams();
   const catalogue = lockedReportId
     ? catalogueForRole(role).filter((r) => r.id === lockedReportId)
     : catalogueForRole(role);
@@ -43,6 +45,24 @@ export function ReportsCentre({
   const [dateTo, setDateTo] = useState("");
   const [includeOverview, setIncludeOverview] = useState(true);
   const [includeTables, setIncludeTables] = useState(true);
+  const [boardPack, setBoardPack] = useState(false);
+
+  useEffect(() => {
+    if (search.get("preset") === "board_pack" && !lockedReportId) {
+      applyBoardPack();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search]);
+
+  function applyBoardPack() {
+    setSelected("leadership_summary");
+    setProgrammeId("");
+    setDateFrom("");
+    setDateTo("");
+    setIncludeOverview(true);
+    setIncludeTables(true);
+    setBoardPack(true);
+  }
 
   const params: ReportParams = useMemo(
     () => ({
@@ -63,7 +83,20 @@ export function ReportsCentre({
         <PageHeader
           title="Reports centre"
           description={`Live previews from selectors · Data as of ${formatDate(state.meta.demoDate)}`}
+          actions={
+            role === "leadership" && !lockedReportId ? (
+              <Button size="sm" variant="secondary" onClick={applyBoardPack}>
+                Board Pack
+              </Button>
+            ) : undefined
+          }
         />
+        {boardPack ? (
+          <p className="mb-3 text-sm text-muted" data-testid="board-pack-banner">
+            Board Pack preset: Leadership Summary with portfolio KPIs, RAG,
+            verified financials, delays, milestones and impact metrics.
+          </p>
+        ) : null}
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[16rem_1fr]">

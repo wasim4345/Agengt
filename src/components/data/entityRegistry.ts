@@ -8,6 +8,7 @@ export type EntityKind =
   | "milestones"
   | "activityMilestones"
   | "clients"
+  | "offices"
   | "users"
   | "categories"
   | "activityCategories"
@@ -19,6 +20,7 @@ export type EntityKind =
   | "startups"
   | "programmeStartups"
   | "achievements"
+  | "kpis"
   | "approvals"
   | "budgetRevisions"
   | "delayImpacts";
@@ -76,21 +78,33 @@ export const ENTITY_TABS: EntityDef[] = [
   },
   {
     key: "clients",
-    label: "Clients",
+    label: "Sponsors",
     shape: "record",
-    columns: ["id", "name", "sector", "contactName"],
+    columns: ["id", "name", "type", "sector", "contactName"],
+  },
+  {
+    key: "offices",
+    label: "Offices",
+    shape: "record",
+    columns: ["id", "name", "state", "isHq"],
   },
   {
     key: "users",
     label: "Users",
     shape: "record",
-    columns: ["id", "name", "role", "email", "active"],
+    columns: ["id", "name", "role", "title", "canApprove", "active"],
   },
   {
     key: "categories",
     label: "Categories",
     shape: "record",
-    columns: ["id", "name", "code", "builtIn"],
+    columns: ["id", "name", "code", "stage", "builtIn"],
+  },
+  {
+    key: "kpis",
+    label: "Programme KPIs",
+    shape: "record",
+    columns: ["id", "programmeId", "name", "unit", "target", "sortOrder"],
   },
   {
     key: "activityCategories",
@@ -198,7 +212,8 @@ export function newEntityStub(def: EntityDef): Record<string, unknown> {
         code: "IIMCIP-NEW-000",
         name: "New programme",
         categoryId: "cat_incubation",
-        clientId: "cli_vanguard",
+        clientId: "cli_balmer",
+        officeId: "off_kolkata",
         managerId: "usr_arjun",
         teamIds: ["usr_arjun"],
         startDate: "2026-11-12",
@@ -213,6 +228,28 @@ export function newEntityStub(def: EntityDef): Record<string, unknown> {
         clientBudgetSummaryVisible: false,
         createdAt: "2026-11-12T12:00:00.000Z",
         createdBy: "usr_arjun",
+      };
+    case "offices":
+      return {
+        id,
+        name: "New office",
+        state: "West Bengal",
+        isHq: false,
+      };
+    case "kpis":
+      return {
+        id,
+        programmeId: "prg_p1",
+        name: "New metric",
+        unit: "count",
+        target: 0,
+        sortOrder: 99,
+      };
+    case "clients":
+      return {
+        id,
+        name: "New sponsor",
+        type: "other",
       };
     case "activities":
       return {
@@ -254,8 +291,6 @@ export function newEntityStub(def: EntityDef): Record<string, unknown> {
       };
     case "activityMilestones":
       return { activityId: "act_p1_a01", milestoneId: "ms_p1_m1", gating: true };
-    case "clients":
-      return { id, name: "New client", sector: "" };
     case "users":
       return {
         id,
@@ -263,8 +298,9 @@ export function newEntityStub(def: EntityDef): Record<string, unknown> {
         email: "new@demo.local",
         role: "programme_manager" as const,
         title: "Staff",
-        avatarColor: "#2563EB",
+        avatarColor: "#17719F",
         active: true,
+        canApprove: true,
       };
     case "categories":
       return {
@@ -273,6 +309,7 @@ export function newEntityStub(def: EntityDef): Record<string, unknown> {
         colour: "#64748B",
         code: "NEW",
         builtIn: false,
+        stage: "custom",
       };
     case "activityCategories":
       return { id, name: "New activity category", colour: "#64748B" };

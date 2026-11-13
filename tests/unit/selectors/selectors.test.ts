@@ -34,10 +34,10 @@ describe("role selectors", () => {
 
   it("leadership KPIs and alerts use live store data", () => {
     const k = leadership.kpis(state);
-    expect(k.totalProgrammes).toBe(6);
+    expect(k.totalProgrammes).toBe(8);
     expect(k.delayedActivities).toBeGreaterThan(0);
-    expect(leadership.programmeRows(state).length).toBe(6);
-    expect(leadership.financialOverview(state).length).toBe(6);
+    expect(leadership.programmeRows(state).length).toBe(8);
+    expect(leadership.financialOverview(state).length).toBe(8);
     expect(leadership.riskAlerts(state).length).toBeGreaterThan(0);
   });
 
@@ -51,19 +51,19 @@ describe("role selectors", () => {
   });
 
   it("client selectors omit forbidden keys and hide money by default", () => {
-    const overview = client.overview(state, "cli_vanguard");
+    const overview = client.overview(state, "cli_balmer");
     expect(overview.length).toBeGreaterThan(0);
     expect(overview[0]).not.toHaveProperty("budgetSummary");
-    const reports = client.releasedReports(state, "cli_vanguard");
+    const reports = client.releasedReports(state, "cli_balmer");
     expect(reports.every((r) => !("observations" in r))).toBe(true);
-    expect(client.photos(state, "cli_vanguard").length).toBeGreaterThan(0);
+    expect(client.photos(state, "cli_balmer").length).toBeGreaterThan(0);
 
     const json = JSON.stringify({
       overview,
-      milestones: client.milestones(state, "cli_vanguard"),
+      milestones: client.milestones(state, "cli_balmer"),
       reports,
-      photos: client.photos(state, "cli_vanguard"),
-      outputs: client.keyOutputs(state, "cli_vanguard"),
+      photos: client.photos(state, "cli_balmer"),
+      outputs: client.keyOutputs(state, "cli_balmer"),
     });
     for (const key of CLIENT_FORBIDDEN_KEYS) {
       expect(json.includes(`"${key}"`)).toBe(false);
@@ -93,7 +93,7 @@ describe("role selectors", () => {
   it("finance role queue and alerts", () => {
     expect(financeRole.queue(state).length).toBeGreaterThan(0);
     expect(financeRole.alerts(state).length).toBeGreaterThan(0);
-    expect(financeRole.programmeBudgets(state).length).toBe(6);
+    expect(financeRole.programmeBudgets(state).length).toBe(8);
   });
 
   it("builds seven report types", () => {

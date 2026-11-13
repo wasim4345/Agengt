@@ -16,6 +16,7 @@ import { addCalendarDays, dayDiff } from "@/lib/rules/dates";
 import { validateAddDependency } from "@/lib/rules/dependencies";
 import { canSetActivityBudget, canSetProgrammeBudget } from "@/lib/rules/budget";
 import { validateProgramme } from "@/lib/rules/programme";
+import { canSelfApprove } from "@/lib/approvals";
 
 function nid(prefix: string): string {
   return `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`;
@@ -740,6 +741,8 @@ export function applyDecideActivation(
       message: "Only Leadership can decide activation.",
     });
   }
+  const self = canSelfApprove(draft, approval.requestedBy);
+  if (!self.ok && !draft.meta.allowRuleBreaking) return self;
 
   const programme = draft.programmes[approval.programmeId];
   if (!programme) {

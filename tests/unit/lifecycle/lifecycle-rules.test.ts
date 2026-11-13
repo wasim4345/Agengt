@@ -128,10 +128,10 @@ describe("lifecycle rules coverage", () => {
     );
     expect(blocked.ok).toBe(false);
 
-    // draft p5 can cancel without open expenses
+    // draft p7 can cancel without open expenses
     const draftOk = canRequestCancellation(
       state,
-      IDS.programmes.p5,
+      IDS.programmes.p7,
       "No longer needed",
     );
     expect(draftOk.ok).toBe(true);
@@ -140,12 +140,22 @@ describe("lifecycle rules coverage", () => {
     store.getState().setUser(IDS.users.meera);
     const cancel = store
       .getState()
-      .requestCancellation(IDS.programmes.p5, "No longer needed");
+      .requestCancellation(IDS.programmes.p7, "No longer needed");
     expect(cancel.ok).toBe(true);
-    expect(store.getState().state.programmes[IDS.programmes.p5]?.status).toBe(
+    if (!cancel.ok) return;
+    // Same persona cannot approve; Chairman decides (doc 08 §5b)
+    store.getState().setUser(IDS.users.chairman);
+    const decided = store
+      .getState()
+      .decideLifecycle(cancel.data.approvalId, {
+        approved: true,
+        remarks: "Board concurs",
+      });
+    expect(decided.ok).toBe(true);
+    expect(store.getState().state.programmes[IDS.programmes.p7]?.status).toBe(
       "cancelled",
     );
-    expect(canReportOnProgramme(store.getState().state, IDS.programmes.p5).ok).toBe(
+    expect(canReportOnProgramme(store.getState().state, IDS.programmes.p7).ok).toBe(
       false,
     );
   });
@@ -154,7 +164,7 @@ describe("lifecycle rules coverage", () => {
     const store = createTestStore();
     const state = store.getState().state;
     expect(canRequestClosureResult(state, "missing").ok).toBe(false);
-    expect(canRequestClosureResult(state, IDS.programmes.p5).ok).toBe(false);
+    expect(canRequestClosureResult(state, IDS.programmes.p7).ok).toBe(false);
     expect(canRequestClosureResult(state, IDS.programmes.p1).ok).toBe(false);
 
     expect(canReplaceManager(state, "missing", IDS.users.kavya).ok).toBe(false);

@@ -1,4 +1,4 @@
-import type { AppState } from "@/types/domain";
+import type { AppState, Category, Client, User } from "@/types/domain";
 import { CURRENT_SCHEMA_VERSION } from "@/types/domain";
 import { buildDefaultSeed } from "@/seed";
 
@@ -21,12 +21,10 @@ export function migrate(raw: unknown): AppState {
     typeof raw.schemaVersion === "number" ? raw.schemaVersion : 0;
 
   if (version > CURRENT_SCHEMA_VERSION) {
-    // Future dump — best-effort cast after ensuring required collections exist
     return ensureShape(raw as unknown as AppState);
   }
 
   if (version < 1) {
-    // Pre-versioned prototype dumps: wrap if it looks like AppState-ish
     if (isObject(raw.meta) && isObject(raw.programmes)) {
       return ensureShape({
         ...(raw as unknown as AppState),
@@ -41,14 +39,37 @@ export function migrate(raw: unknown): AppState {
 
 function ensureShape(state: AppState): AppState {
   const fallback = buildDefaultSeed(state.meta?.demoDate);
+  const users = { ...(state.users ?? {}) };
+  for (const [id, user] of Object.entries(users)) {
+    const u = user as User;
+    if (u.role === "leadership" && u.canApprove === undefined) {
+      users[id] = { ...u, canApprove: true };
+    }
+  }
+  const clients = { ...(state.clients ?? {}) };
+  for (const [id, client] of Object.entries(clients)) {
+    const c = client as Client;
+    if (!c.type) {
+      clients[id] = { ...c, type: "other" };
+    }
+  }
+  const categories = { ...(state.categories ?? {}) };
+  for (const [id, cat] of Object.entries(categories)) {
+    const c = cat as Category;
+    if (!c.stage) {
+      categories[id] = { ...c, stage: "custom" };
+    }
+  }
+
   return {
     ...fallback,
     ...state,
-    schemaVersion: 1,
+    schemaVersion: CURRENT_SCHEMA_VERSION,
     meta: { ...fallback.meta, ...state.meta },
-    users: state.users ?? {},
-    clients: state.clients ?? {},
-    categories: state.categories ?? {},
+    users,
+    clients,
+    offices: state.offices ?? fallback.offices,
+    categories,
     activityCategories: state.activityCategories ?? {},
     expenseCategories: state.expenseCategories ?? {},
     templates: state.templates ?? {},
@@ -65,6 +86,7 @@ function ensureShape(state: AppState): AppState {
     startups: state.startups ?? {},
     programmeStartups: state.programmeStartups ?? [],
     achievements: state.achievements ?? {},
+    kpis: state.kpis ?? {},
     approvals: state.approvals ?? {},
     delayImpacts: state.delayImpacts ?? {},
     notifications: state.notifications ?? {},

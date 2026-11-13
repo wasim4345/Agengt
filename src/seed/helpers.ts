@@ -73,6 +73,7 @@ export function buildProgrammeShell(opts: {
   name: string;
   categoryId: ID;
   clientId: ID;
+  officeId?: ID;
   managerId: ID;
   teamIds: ID[];
   start: number;
@@ -232,6 +233,7 @@ export function content(
     expenseIncurred: partial.expenseIncurred ?? null,
     participants: partial.participants,
     startups: partial.startups,
+    kpiValues: partial.kpiValues,
     progressDetails: partial.progressDetails,
     delay: partial.delay,
     cancellationReason: partial.cancellationReason,

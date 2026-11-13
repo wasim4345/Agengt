@@ -32,8 +32,8 @@ describe("M10 reports centre — demo step 13", () => {
     expect(report.title).toBe("Leadership Summary");
     expect(report.dataAsOf).toBe(state.meta.demoDate);
     expect(report.generatedBy).toBeTruthy();
-    expect(report.rows?.length).toBe(6);
-    expect(report.totals?.programmes).toBe(6);
+    expect(report.rows?.length).toBe(8);
+    expect(report.totals?.programmes).toBe(8);
 
     const csv = reportToCsv(report);
     expect(csv).toContain("Data as of");
