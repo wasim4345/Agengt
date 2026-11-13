@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { RoleGate } from "@/components/RoleGate";
 import { PageHeader } from "@/components/layout/PageHeader";
 import {
@@ -14,11 +14,12 @@ import {
   Field,
   useToast,
 } from "@/components/ui";
-import { useOsStore } from "@/store/store";
+import { flushPersist, useOsStore } from "@/store/store";
 import type { ID, Template } from "@/types/domain";
 
 export default function TemplatesPage() {
-  const templates = useOsStore((s) => Object.values(s.state.templates));
+  const templateMap = useOsStore((s) => s.state.templates);
+  const templates = useMemo(() => Object.values(templateMap), [templateMap]);
   const categories = useOsStore((s) => s.state.categories);
   const createProgrammeDraft = useOsStore((s) => s.createProgrammeDraft);
   const applyTemplate = useOsStore((s) => s.applyTemplate);
@@ -52,6 +53,8 @@ export default function TemplatesPage() {
       });
       return;
     }
+    // Persist before full navigation so the draft survives reload
+    flushPersist();
     window.location.href = `/programmes/new/?id=${created.data.programmeId}`;
   }
 
