@@ -1,5 +1,12 @@
 # Changelog
 
+## M2 — Shell & roles (2026-11-12)
+
+- App shell: Header, Sidebar, Banner, Demo clock, Role/Persona switchers, Notifications bell, global programme search
+- `navConfig` drives role-specific navigation; root redirects to role home
+- `RoleGate` omits forbidden page content and shows “Not available for this role”
+- Role homes and nav destinations wired to live store data (thin screens; full modules later)
+
 ## M1 — Store & seed (2026-11-12)
 
 - Domain types from doc 03 in `src/types/domain.ts`
