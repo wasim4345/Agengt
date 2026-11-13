@@ -20,15 +20,35 @@ export interface User {
   clientId?: ID; // for role=client: which organisation they belong to
   avatarColor: string;
   active: boolean;
+  /** Leadership only: false = view-only (hide Approve/Release). Default true. */
+  canApprove?: boolean;
 }
+
+export type SponsorType =
+  | "government"
+  | "corporate"
+  | "csr"
+  | "psu"
+  | "multilateral"
+  | "ngo"
+  | "other";
 
 export interface Client {
   id: ID;
   name: string;
+  type: SponsorType;
   sector?: string;
   contactName?: string;
   contactEmail?: string;
 }
+
+/** Programme stage for P-CTX-05 ribbon (editable for custom categories). */
+export type ProgrammeStage =
+  | "awareness"
+  | "idea_to_prototype"
+  | "prototype_to_revenue"
+  | "growth"
+  | "custom";
 
 export interface Category {
   id: ID;
@@ -36,7 +56,25 @@ export interface Category {
   colour: string;
   code: string;
   builtIn: boolean;
+  stage: ProgrammeStage;
 } // programme categories
+
+export interface Office {
+  id: ID;
+  name: string;
+  state: string;
+  isHq?: boolean;
+}
+
+/** Programme output metric definition (P-CTX-01). */
+export interface Kpi {
+  id: ID;
+  programmeId: ID;
+  name: string;
+  unit: "count" | "inr";
+  target: number;
+  sortOrder: number;
+}
 
 export interface ActivityCategory {
   id: ID;
@@ -64,6 +102,7 @@ export interface Programme {
   name: string;
   categoryId: ID;
   clientId: ID;
+  officeId?: ID;
   managerId: ID;
   teamIds: ID[];
   startDate: ISODate;
@@ -241,6 +280,8 @@ export interface ReportContent {
   keyOutcomes: string;
   participants?: number;
   startups?: number;
+  /** Period values for programme KPIs (P-CTX-01). */
+  kpiValues?: { kpiId: ID; value: number }[];
   observations: string; // INTERNAL
   additionalRemarks: string; // INTERNAL
   clientSummary: string; // shown to client/MarCom after release
@@ -427,10 +468,11 @@ export interface AppMeta {
 }
 
 export interface AppState {
-  schemaVersion: 1;
+  schemaVersion: 1 | 2;
   meta: AppMeta;
   users: Record<ID, User>;
   clients: Record<ID, Client>;
+  offices: Record<ID, Office>;
   categories: Record<ID, Category>;
   activityCategories: Record<ID, ActivityCategory>;
   expenseCategories: Record<ID, ExpenseCategory>;
@@ -448,6 +490,7 @@ export interface AppState {
   startups: Record<ID, Startup>;
   programmeStartups: ProgrammeStartup[];
   achievements: Record<ID, Achievement>;
+  kpis: Record<ID, Kpi>;
   approvals: Record<ID, Approval>;
   delayImpacts: Record<ID, DelayImpact>;
   notifications: Record<ID, Notification>;
@@ -472,6 +515,14 @@ export const STORAGE_KEYS = {
   snapshots: "iimcip-os:v1:snapshots",
 } as const;
 
-export const SEED_VERSION = "1.0.0";
-export const CURRENT_SCHEMA_VERSION = 1 as const;
+export const SEED_VERSION = "2.0.0";
+export const CURRENT_SCHEMA_VERSION = 2 as const;
 export const DEFAULT_DEMO_DATE = "2026-11-12";
+
+export const STAGE_LABELS: Record<ProgrammeStage, string> = {
+  awareness: "Awareness",
+  idea_to_prototype: "Idea → Prototype",
+  prototype_to_revenue: "Prototype → Revenue",
+  growth: "Growth",
+  custom: "Custom",
+};

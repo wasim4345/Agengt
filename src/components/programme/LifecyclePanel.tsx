@@ -134,7 +134,7 @@ export function LifecyclePanel({ programmeId }: { programmeId: ID }) {
                 const r = requestCancellation(programmeId, reason);
                 toastResult(
                   r.ok,
-                  role === "leadership" ? "Programme cancelled" : "Cancellation requested",
+                  "Cancellation requested — other Leadership persona must approve",
                   r.ok ? undefined : r.errors,
                 );
               }}

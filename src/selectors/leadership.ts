@@ -12,6 +12,8 @@ export type LeadershipFilters = {
   categoryId?: ID;
   clientId?: ID;
   managerId?: ID;
+  officeId?: ID;
+  sponsorType?: string;
   status?: ProgrammeStatus;
   dateFrom?: string;
   dateTo?: string;
@@ -28,6 +30,11 @@ function matchesFilters(
   if (filters.categoryId && p.categoryId !== filters.categoryId) return false;
   if (filters.clientId && p.clientId !== filters.clientId) return false;
   if (filters.managerId && p.managerId !== filters.managerId) return false;
+  if (filters.officeId && p.officeId !== filters.officeId) return false;
+  if (filters.sponsorType) {
+    const type = state.clients[p.clientId]?.type;
+    if (type !== filters.sponsorType) return false;
+  }
   if (filters.status && p.status !== filters.status) return false;
   if (filters.dateFrom && dayDiff(p.endDate, filters.dateFrom) > 0) return false;
   if (filters.dateTo && dayDiff(filters.dateTo, p.startDate) > 0) return false;
@@ -85,6 +92,10 @@ export function programmeRows(state: AppState, filters?: LeadershipFilters) {
         category: state.categories[p.categoryId]?.name,
         clientId: p.clientId,
         client: state.clients[p.clientId]?.name,
+        sponsorType: state.clients[p.clientId]?.type,
+        officeId: p.officeId,
+        office: p.officeId ? state.offices[p.officeId]?.name : undefined,
+        stateName: p.officeId ? state.offices[p.officeId]?.state : undefined,
         managerId: p.managerId,
         manager: state.users[p.managerId]?.name,
         status: p.status,
@@ -186,4 +197,32 @@ export function riskAlerts(state: AppState) {
   }
 
   return alerts;
+}
+
+export function programmesBySponsorType(
+  state: AppState,
+  filters?: LeadershipFilters,
+) {
+  const counts = new Map<string, number>();
+  for (const p of Object.values(state.programmes)) {
+    if (!matchesFilters(state, p.id, filters)) continue;
+    const type = state.clients[p.clientId]?.type ?? "other";
+    counts.set(type, (counts.get(type) ?? 0) + 1);
+  }
+  return [...counts.entries()].map(([name, value]) => ({ name, value }));
+}
+
+export function programmesByOffice(
+  state: AppState,
+  filters?: LeadershipFilters,
+) {
+  const counts = new Map<string, number>();
+  for (const p of Object.values(state.programmes)) {
+    if (!matchesFilters(state, p.id, filters)) continue;
+    const office = p.officeId
+      ? state.offices[p.officeId]?.name ?? "Unassigned"
+      : "Unassigned";
+    counts.set(office, (counts.get(office) ?? 0) + 1);
+  }
+  return [...counts.entries()].map(([name, value]) => ({ name, value }));
 }

@@ -3,20 +3,22 @@ import { buildDefaultSeed, IDS } from "@/seed";
 import { programmeFinancials } from "@/selectors/finance";
 import { runIntegrityChecks } from "@/selectors/integrity";
 
-describe("default seed (doc 06 §4)", () => {
+describe("default seed (doc 08 §4)", () => {
   const state = buildDefaultSeed("2026-11-12");
 
-  it("includes six programmes with expected codes", () => {
+  it("includes eight programmes with expected codes", () => {
     const codes = Object.values(state.programmes)
       .map((p) => p.code)
       .sort();
     expect(codes).toEqual([
       "IIMCIP-ACC-2026-002",
-      "IIMCIP-ACC-2026-006",
-      "IIMCIP-IMM-2026-004",
+      "IIMCIP-ACC-2026-003",
+      "IIMCIP-ACC-2026-004",
+      "IIMCIP-CHAL-2025-005",
+      "IIMCIP-IMM-2026-008",
       "IIMCIP-INC-2026-001",
-      "IIMCIP-INC-2026-005",
-      "IIMCIP-PRE-2026-003",
+      "IIMCIP-INC-2026-007",
+      "IIMCIP-SEED-2026-006",
     ]);
   });
 
@@ -29,6 +31,18 @@ describe("default seed (doc 06 §4)", () => {
     expect(fin.budget).toBe(25_00_000);
     expect(fin.allocated).toBe(22_50_000);
     expect(fin.unallocated).toBe(2_50_000);
+  });
+
+  it("seeds offices, custom categories, KPIs, and dual Leadership personas", () => {
+    expect(Object.keys(state.offices)).toHaveLength(8);
+    expect(state.categories[IDS.categories.seedFund]?.name).toBe("Seed Fund");
+    expect(state.categories[IDS.categories.challenge]?.stage).toBe("awareness");
+    expect(Object.keys(state.kpis).length).toBeGreaterThan(10);
+    const leadership = Object.values(state.users).filter(
+      (u) => u.role === "leadership",
+    );
+    expect(leadership).toHaveLength(2);
+    expect(leadership.every((u) => u.canApprove !== false)).toBe(true);
   });
 
   it("seeds 18 startups and 8 achievements", () => {

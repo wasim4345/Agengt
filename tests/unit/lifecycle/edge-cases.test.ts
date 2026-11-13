@@ -79,14 +79,14 @@ describe("M11 — doc 04 §9 edge cases (1–20)", () => {
 
   it("4 Allocation > budget blocked with headroom", () => {
     const state = createTestStore().getState().state;
-    const r = canSetActivityBudget(state, "act_p5_a01", 50_00_000);
+    const r = canSetActivityBudget(state, "act_p7_a01", 50_00_000);
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.errors[0]?.message).toMatch(/Headroom|exceeds/i);
   });
 
   it("5 Spend > allocation flagged; verify blocked", () => {
     const state = createTestStore().getState().state;
-    expect(canVerifyExpense(state, "exp_p2_02").ok).toBe(false);
+    expect(canVerifyExpense(state, "exp_p2_overspend").ok).toBe(false);
     const over = validateExpenseEntry(state, {
       activityId: "act_p1_a07",
       date: "2026-11-12",
@@ -127,12 +127,19 @@ describe("M11 — doc 04 §9 edge cases (1–20)", () => {
       .requestCancellation(IDS.programmes.p1, "Sponsor withdrew");
     expect(blocked.ok).toBe(false);
 
-    // Cancel draft p5 (no open expenses)
+    // Cancel draft TITAN-NEST (no open expenses); other Leadership persona approves
     const okCancel = store
       .getState()
-      .requestCancellation(IDS.programmes.p5, "No longer needed");
+      .requestCancellation(IDS.programmes.p7, "No longer needed");
     expect(okCancel.ok).toBe(true);
-    expect(store.getState().state.programmes[IDS.programmes.p5]?.status).toBe(
+    if (!okCancel.ok) return;
+    store.getState().setUser(IDS.users.chairman);
+    const decided = store.getState().decideLifecycle(okCancel.data.approvalId, {
+      approved: true,
+      remarks: "Agreed",
+    });
+    expect(decided.ok).toBe(true);
+    expect(store.getState().state.programmes[IDS.programmes.p7]?.status).toBe(
       "cancelled",
     );
   });

@@ -43,8 +43,10 @@ import {
 } from "@/lib/leadershipFilters";
 import * as leadership from "@/selectors/leadership";
 import type { LeadershipFilters } from "@/selectors/leadership";
+import * as kpiSel from "@/selectors/kpi";
 import { useOsStore } from "@/store/store";
-import type { ProgrammeStatus } from "@/types/domain";
+import type { ProgrammeStatus, SponsorType } from "@/types/domain";
+import { IDS } from "@/seed/ids";
 
 function Kpi({
   label,
@@ -80,6 +82,8 @@ function LeadershipInner() {
   const [sortKey, setSortKey] = useState<"code" | "progress" | "budget" | "delayed">(
     "code",
   );
+  const isChairman = state.meta.currentUserId === IDS.users.chairman;
+  const boardView = isChairman || searchParams.get("board") === "1";
 
   function setFilters(next: LeadershipFilters) {
     const q = searchParamsFromFilters(next).toString();
@@ -91,6 +95,9 @@ function LeadershipInner() {
   const financial = leadership.financialOverview(state, filters);
   const milestones = leadership.upcomingMilestones(state);
   const risks = leadership.riskAlerts(state);
+  const impact = kpiSel.portfolioImpact(state);
+  const bySponsor = leadership.programmesBySponsorType(state, filters);
+  const byOffice = leadership.programmesByOffice(state, filters);
 
   const byCategory = useMemo(() => {
     const map = new Map<string, number>();
@@ -145,17 +152,21 @@ function LeadershipInner() {
   return (
     <>
       <PageHeader
-        title="Leadership dashboard"
-        description={`Portfolio overview · Data as of ${formatDate(state.meta.demoDate)}`}
+        title={boardView ? "Board view" : "Leadership dashboard"}
+        description={
+          boardView
+            ? `Chairman / Board pack surface · Data as of ${formatDate(state.meta.demoDate)}`
+            : `Portfolio overview · Data as of ${formatDate(state.meta.demoDate)}`
+        }
         actions={
           <Button
             size="sm"
             variant="secondary"
             onClick={() => {
-              window.location.href = "/reports/";
+              window.location.href = "/reports/?preset=board_pack";
             }}
           >
-            Export to Reports
+            {boardView ? "Open Board Pack" : "Export to Reports"}
           </Button>
         }
       />
@@ -182,7 +193,7 @@ function LeadershipInner() {
               ))}
             </select>
           </Field>
-          <Field label="Client" className="min-w-[10rem]">
+          <Field label="Sponsor" className="min-w-[10rem]">
             <select
               className="w-full rounded-md border border-border bg-surface px-3 py-2 text-sm"
               value={filters.clientId ?? ""}
@@ -197,6 +208,58 @@ function LeadershipInner() {
               {Object.values(state.clients).map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.name}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <Field label="Sponsor type" className="min-w-[10rem]">
+            <select
+              data-testid="filter-sponsor-type"
+              className="w-full rounded-md border border-border bg-surface px-3 py-2 text-sm"
+              value={filters.sponsorType ?? ""}
+              onChange={(e) =>
+                setFilters({
+                  ...filters,
+                  sponsorType: (e.target.value || undefined) as
+                    | SponsorType
+                    | undefined,
+                })
+              }
+            >
+              <option value="">All</option>
+              {(
+                [
+                  "government",
+                  "corporate",
+                  "csr",
+                  "psu",
+                  "multilateral",
+                  "ngo",
+                  "other",
+                ] as SponsorType[]
+              ).map((t) => (
+                <option key={t} value={t}>
+                  {t}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <Field label="Office / State" className="min-w-[10rem]">
+            <select
+              data-testid="filter-office"
+              className="w-full rounded-md border border-border bg-surface px-3 py-2 text-sm"
+              value={filters.officeId ?? ""}
+              onChange={(e) =>
+                setFilters({
+                  ...filters,
+                  officeId: e.target.value || undefined,
+                })
+              }
+            >
+              <option value="">All</option>
+              {Object.values(state.offices).map((o) => (
+                <option key={o.id} value={o.id}>
+                  {o.name} ({o.state})
                 </option>
               ))}
             </select>
@@ -277,6 +340,35 @@ function LeadershipInner() {
         </CardContent>
       </Card>
 
+      {impact.length > 0 ? (
+        <Card className="mb-4" data-testid="portfolio-impact-strip">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">Portfolio impact</CardTitle>
+            <p className="text-xs text-muted">
+              Cross-programme KPI targets vs achieved (submitted + released)
+            </p>
+          </CardHeader>
+          <CardContent className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {impact.map((row) => (
+              <div key={row.name} className="rounded-lg border border-border p-3">
+                <p className="text-xs text-muted">{row.name}</p>
+                <p className="text-lg font-semibold">
+                  {kpiSel.formatKpiValue(row.unit, row.achieved)}
+                  <span className="text-sm font-normal text-muted">
+                    {" "}
+                    / {kpiSel.formatKpiValue(row.unit, row.target)}
+                  </span>
+                </p>
+                <p className="text-[11px] text-muted">
+                  {row.programmeCount} programme
+                  {row.programmeCount === 1 ? "" : "s"}
+                </p>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      ) : null}
+
       <div
         className="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4"
         data-testid="leadership-kpis"
@@ -331,6 +423,31 @@ function LeadershipInner() {
               <Tooltip />
               <Legend />
             </PieChart>
+          </ResponsiveContainer>
+        </ChartCard>
+        <ChartCard
+          title="Programmes by sponsor type"
+          empty={bySponsor.length === 0}
+        >
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={bySponsor}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e8e8e8" />
+              <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+              <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
+              <Tooltip />
+              <Bar dataKey="value" fill={CHART.primary} radius={4} />
+            </BarChart>
+          </ResponsiveContainer>
+        </ChartCard>
+        <ChartCard title="Programmes by office" empty={byOffice.length === 0}>
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={byOffice}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e8e8e8" />
+              <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+              <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
+              <Tooltip />
+              <Bar dataKey="value" fill={CHART.info ?? CHART.primary} radius={4} />
+            </BarChart>
           </ResponsiveContainer>
         </ChartCard>
         <ChartCard

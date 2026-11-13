@@ -6,6 +6,7 @@ import { mergePacks } from "./helpers";
 import { IDS } from "./ids";
 import { buildP1 } from "./programmes/p1";
 import { buildOtherProgrammes } from "./programmes/others";
+import { buildKpis } from "./kpis";
 import {
   buildAchievements,
   buildProgrammeStartups,
@@ -50,7 +51,7 @@ export function buildDefaultSeed(
     },
   };
 
-  const approvalId = "apr_p6_activation";
+  const approvalId = "apr_p8_activation";
   const state: AppState = {
     ...directory,
     ...empty,
@@ -66,14 +67,15 @@ export function buildDefaultSeed(
     startups: buildStartups(),
     programmeStartups: buildProgrammeStartups(),
     achievements: buildAchievements(demoDate),
+    kpis: buildKpis(),
     delayImpacts,
     approvals: {
       [approvalId]: {
         id: approvalId,
-        programmeId: IDS.programmes.p6,
+        programmeId: IDS.programmes.p8,
         type: "activation",
         status: "pending",
-        requestedBy: IDS.users.rohit,
+        requestedBy: IDS.users.kavya,
         requestedAt: ts(demoDate, -2),
         reason: "Ready for Leadership approval",
       },

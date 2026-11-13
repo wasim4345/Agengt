@@ -22,15 +22,15 @@ describe("M9 dashboards — demo steps 1, 2, 9, 11, 12", () => {
     createTestStore(buildDefaultSeed("2026-11-12"));
   });
 
-  it("demo step 1: Leadership sees 6 programmes, budget, verified, delays, risks", () => {
+  it("demo step 1: Leadership sees 8 programmes, budget, verified, delays, risks", () => {
     const state = createTestStore().getState().state;
     const k = leadership.kpis(state);
-    expect(k.totalProgrammes).toBe(6);
+    expect(k.totalProgrammes).toBe(8);
     expect(k.totalBudget).toBeGreaterThan(0);
     expect(k.verifiedExpenditure).toBeGreaterThan(0);
     expect(k.delayedActivities).toBeGreaterThan(0);
     expect(leadership.riskAlerts(state).length).toBeGreaterThan(0);
-    expect(leadership.financialOverview(state).length).toBe(6);
+    expect(leadership.financialOverview(state).length).toBe(8);
   });
 
   it("demo step 2: filter category=Incubation then client; URL round-trip", () => {
@@ -39,7 +39,7 @@ describe("M9 dashboards — demo steps 1, 2, 9, 11, 12", () => {
       categoryId: IDS.categories.incubation,
     });
     expect(incubation.totalProgrammes).toBeGreaterThan(0);
-    expect(incubation.totalProgrammes).toBeLessThan(6);
+    expect(incubation.totalProgrammes).toBeLessThan(8);
 
     const rows = leadership.programmeRows(state, {
       categoryId: IDS.categories.incubation,

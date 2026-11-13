@@ -30,12 +30,12 @@ describe("M5 programme wizard & templates", () => {
       .applyTemplate(created.data.programmeId, IDS.templates.incubation);
     expect(applied.ok).toBe(true);
     if (!applied.ok) return;
-    expect(applied.data.activityCount).toBe(11);
+    expect(applied.data.activityCount).toBe(12);
 
     const activities = Object.values(store.getState().state.activities).filter(
       (a) => a.programmeId === created.data.programmeId,
     );
-    expect(activities).toHaveLength(11);
+    expect(activities).toHaveLength(12);
 
     // edit dates, add one, delete one
     const first = activities[0]!;
@@ -64,8 +64,8 @@ describe("M5 programme wizard & templates", () => {
     const remaining = Object.values(store.getState().state.activities).filter(
       (a) => a.programmeId === created.data.programmeId,
     );
-    // 11 template blocks + 1 extra − outreach − extra = 10
-    expect(remaining.length).toBe(10);
+    // 12 template blocks + 1 extra − outreach − extra = 11
+    expect(remaining.length).toBe(11);
     expect(
       remaining.some((a) => a.name.includes("edited")),
     ).toBe(true);
@@ -139,7 +139,7 @@ describe("M5 programme wizard & templates", () => {
     const created = store.getState().createProgrammeDraft({
       name: "Approval demo",
       categoryId: IDS.categories.incubation,
-      clientId: IDS.clients.vanguard,
+      clientId: IDS.clients.balmer,
       totalBudget: 25_00_000,
       startDate: "2026-11-12",
       endDate: "2027-11-12",
@@ -196,6 +196,6 @@ describe("M5 programme wizard & templates", () => {
     if (!saved.ok) return;
     expect(
       store.getState().state.templates[saved.data.templateId]?.activities.length,
-    ).toBe(6);
+    ).toBe(4);
   });
 });

@@ -19,6 +19,8 @@ export function filtersFromSearchParams(
     categoryId: params.get("category") || undefined,
     clientId: params.get("client") || undefined,
     managerId: params.get("manager") || undefined,
+    officeId: params.get("office") || undefined,
+    sponsorType: params.get("sponsorType") || undefined,
     status:
       status && (STATUS as string[]).includes(status)
         ? (status as ProgrammeStatus)
@@ -35,6 +37,8 @@ export function searchParamsFromFilters(
   if (filters.categoryId) p.set("category", filters.categoryId);
   if (filters.clientId) p.set("client", filters.clientId);
   if (filters.managerId) p.set("manager", filters.managerId);
+  if (filters.officeId) p.set("office", filters.officeId);
+  if (filters.sponsorType) p.set("sponsorType", filters.sponsorType);
   if (filters.status) p.set("status", filters.status);
   if (filters.dateFrom) p.set("from", filters.dateFrom);
   if (filters.dateTo) p.set("to", filters.dateTo);
@@ -46,6 +50,8 @@ export function hasAnyFilter(filters: LeadershipFilters): boolean {
     filters.categoryId ||
       filters.clientId ||
       filters.managerId ||
+      filters.officeId ||
+      filters.sponsorType ||
       filters.status ||
       filters.dateFrom ||
       filters.dateTo,

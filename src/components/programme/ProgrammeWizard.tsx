@@ -46,11 +46,20 @@ export function ProgrammeWizard({
     applyTemplate,
     submitProgramme,
     activateDemo,
+    rawUpsert,
+    rawDelete,
   } = useOsStore();
   const { push } = useToast();
   const programme = state.programmes[programmeId];
   const [previewTpl, setPreviewTpl] = useState<ID | null>(null);
   const [ackUnallocated, setAckUnallocated] = useState(false);
+  const programmeKpis = useMemo(
+    () =>
+      Object.values(state.kpis)
+        .filter((k) => k.programmeId === programmeId)
+        .sort((a, b) => a.sortOrder - b.sortOrder),
+    [state.kpis, programmeId],
+  );
 
   const step = programme?.wizardDraft?.step ?? 1;
 
@@ -126,6 +135,24 @@ export function ProgrammeWizard({
                 ))}
               </select>
             </Field>
+            <Field label="Office">
+              <select
+                className="w-full rounded-md border border-border bg-surface px-3 py-2 text-sm"
+                value={programme.officeId ?? ""}
+                onChange={(e) =>
+                  updateProgramme(programmeId, {
+                    officeId: e.target.value || undefined,
+                  })
+                }
+              >
+                <option value="">Unassigned</option>
+                {Object.values(state.offices).map((o) => (
+                  <option key={o.id} value={o.id}>
+                    {o.name} ({o.state})
+                  </option>
+                ))}
+              </select>
+            </Field>
             <Field label="Start">
               <input
                 type="date"
@@ -179,6 +206,84 @@ export function ProgrammeWizard({
                 }
               />
             </Field>
+            <div className="md:col-span-2 rounded-lg border border-border p-3">
+              <div className="mb-2 flex items-center justify-between gap-2">
+                <p className="text-sm font-medium">Output metrics (KPIs)</p>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => {
+                    const id = `kpi_${Date.now().toString(36)}`;
+                    rawUpsert("kpis", id, {
+                      id,
+                      programmeId,
+                      name: "New metric",
+                      unit: "count",
+                      target: 0,
+                      sortOrder: programmeKpis.length + 1,
+                    });
+                  }}
+                >
+                  Add metric
+                </Button>
+              </div>
+              {programmeKpis.length === 0 ? (
+                <p className="text-xs text-muted">
+                  Add targets such as startups selected or grants disbursed.
+                </p>
+              ) : (
+                <ul className="flex flex-col gap-2">
+                  {programmeKpis.map((kpi) => (
+                    <li
+                      key={kpi.id}
+                      className="grid gap-2 sm:grid-cols-[1fr_6rem_7rem_auto]"
+                    >
+                      <input
+                        className="rounded-md border border-border bg-surface px-2 py-1.5 text-sm"
+                        value={kpi.name}
+                        onChange={(e) =>
+                          rawUpsert("kpis", kpi.id, {
+                            ...kpi,
+                            name: e.target.value,
+                          })
+                        }
+                      />
+                      <select
+                        className="rounded-md border border-border bg-surface px-2 py-1.5 text-sm"
+                        value={kpi.unit}
+                        onChange={(e) =>
+                          rawUpsert("kpis", kpi.id, {
+                            ...kpi,
+                            unit: e.target.value as "count" | "inr",
+                          })
+                        }
+                      >
+                        <option value="count">Count</option>
+                        <option value="inr">₹</option>
+                      </select>
+                      <input
+                        type="number"
+                        className="rounded-md border border-border bg-surface px-2 py-1.5 text-sm"
+                        value={kpi.target}
+                        onChange={(e) =>
+                          rawUpsert("kpis", kpi.id, {
+                            ...kpi,
+                            target: Number(e.target.value) || 0,
+                          })
+                        }
+                      />
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => rawDelete("kpis", kpi.id)}
+                      >
+                        Remove
+                      </Button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           </CardContent>
         </Card>
       ) : null}
