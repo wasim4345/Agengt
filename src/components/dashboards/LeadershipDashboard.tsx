@@ -94,6 +94,7 @@ function LeadershipInner() {
   const kpis = leadership.kpis(state, filters);
   const rows = leadership.programmeRows(state, filters);
   const financial = leadership.financialOverview(state, filters);
+  const surplus = leadership.overallSurplus(state, filters);
   const milestones = leadership.upcomingMilestones(state);
   const risks = leadership.riskAlerts(state);
   const impact = kpiSel.portfolioImpact(state);
@@ -399,6 +400,16 @@ function LeadershipInner() {
         />
         <Kpi label="Remaining" value={formatINR(kpis.remaining)} />
         <Kpi
+          testId="kpi-overall-surplus"
+          label={
+            surplus.surplus < 0
+              ? "Overall current deficit"
+              : "Overall current surplus"
+          }
+          value={formatINR(Math.abs(surplus.surplus))}
+          sub={`of ${formatINR(surplus.budget)} total budget · ${surplus.programmesInDeficit} programme${surplus.programmesInDeficit === 1 ? "" : "s"} in deficit`}
+        />
+        <Kpi
           label="Overall progress"
           value={`${Math.round(kpis.overallProgress)}%`}
           sub={`Budget-weighted ${Math.round(kpis.overallProgressBudgetWeighted)}%`}
@@ -473,7 +484,7 @@ function LeadershipInner() {
       </div>
 
       <ChartCard
-        title="Financial overview"
+        title="Financial overview — budget vs cost"
         empty={financial.length === 0}
         className="mb-4"
       >
@@ -483,24 +494,34 @@ function LeadershipInner() {
             <XAxis dataKey="code" tick={{ fontSize: 11 }} />
             <YAxis tick={{ fontSize: 11 }} />
             <Tooltip
-              formatter={(value) =>
-                formatINR(typeof value === "number" ? value : Number(value))
-              }
+              formatter={(value, name) => [
+                formatINR(typeof value === "number" ? value : Number(value)),
+                String(name),
+              ]}
+              labelFormatter={(_, payload) => {
+                const row = payload?.[0]?.payload as
+                  | (typeof financial)[number]
+                  | undefined;
+                if (!row) return "";
+                const label =
+                  row.surplus >= 0
+                    ? `Surplus ${formatINR(row.surplus)}`
+                    : `Deficit ${formatINR(Math.abs(row.surplus))}`;
+                return `${row.code} · ${label}`;
+              }}
             />
             <Legend />
-            <Bar dataKey="verified" stackId="a" fill={CHART.verified} name="Verified" />
-            <Bar dataKey="pending" stackId="a" fill={CHART.pending} name="Pending" />
             <Bar
-              dataKey="remaining"
-              stackId="a"
-              fill={CHART.remaining}
-              name="Remaining"
+              dataKey="budget"
+              fill={CHART.primary}
+              name="Budget approved"
+              radius={3}
             />
             <Bar
-              dataKey="unallocated"
-              stackId="a"
-              fill={CHART.unallocated}
-              name="Unallocated"
+              dataKey="cost"
+              fill={CHART.info}
+              name="Cost incurred"
+              radius={3}
             />
           </BarChart>
         </ResponsiveContainer>
@@ -545,7 +566,9 @@ function LeadershipInner() {
                   <TH>Client</TH>
                   <TH>Status</TH>
                   <TH>Progress</TH>
-                  <TH>Budget</TH>
+                  <TH>Budget approved</TH>
+                  <TH>Cost incurred</TH>
+                  <TH>Surplus / Deficit</TH>
                   <TH>Verified</TH>
                   <TH>Utilised</TH>
                   <TH>Delayed</TH>
@@ -556,7 +579,11 @@ function LeadershipInner() {
                 {sortedRows.map((r) => (
                   <TR
                     key={r.id}
-                    className="cursor-pointer hover:bg-background"
+                    className={
+                      r.surplus < 0
+                        ? "cursor-pointer bg-[var(--color-danger)]/5 hover:bg-[var(--color-danger)]/10"
+                        : "cursor-pointer hover:bg-background"
+                    }
                     onClick={() => {
                       navigate(`/programmes/view/?id=${r.id}`);
                     }}
@@ -572,6 +599,17 @@ function LeadershipInner() {
                     </TD>
                     <TD>{Math.round(r.progress)}%</TD>
                     <TD>{formatINR(r.budget)}</TD>
+                    <TD>{formatINR(r.costIncurred)}</TD>
+                    <TD
+                      className={
+                        r.surplus < 0
+                          ? "font-medium text-[var(--color-danger)]"
+                          : undefined
+                      }
+                    >
+                      {r.surplus < 0 ? "Deficit " : "Surplus "}
+                      {formatINR(Math.abs(r.surplus))}
+                    </TD>
                     <TD>{formatINR(r.verified)}</TD>
                     <TD>
                       {r.utilised == null

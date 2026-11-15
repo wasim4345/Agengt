@@ -27,6 +27,7 @@ import { IDS } from "@/seed/ids";
 import * as manager from "@/selectors/manager";
 import { navigate } from "@/lib/basePath";
 import { useOsStore } from "@/store/store";
+import { BudgetVsCostPanel } from "./BudgetVsCostPanel";
 
 export function ManagerDashboard() {
   const state = useOsStore((s) => s.state);
@@ -179,6 +180,8 @@ export function ManagerDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      <BudgetVsCostPanel />
 
       {outreach &&
       programmes.some((p) => p.programme.id === IDS.programmes.p1) ? (

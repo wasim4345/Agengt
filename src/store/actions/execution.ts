@@ -470,6 +470,7 @@ export function applyAddEvidenceMeta(
     blobKey?: string;
     thumb?: string;
     caption?: string;
+    order?: number;
   },
 ): Result<{ evidenceId: ID }> {
   if (input.size > FILE_SIZE_CAP_BYTES) {
@@ -492,6 +493,7 @@ export function applyAddEvidenceMeta(
     blobKey: input.blobKey,
     thumb: input.thumb,
     caption: input.caption,
+    order: input.order,
     uploadedBy: draft.meta.currentUserId,
     uploadedAt: `${draft.meta.demoDate}T12:00:00.000Z`,
     clientApproved: false,
@@ -499,6 +501,47 @@ export function applyAddEvidenceMeta(
   };
   draft.evidence[id] = evidence;
   return ok({ evidenceId: id });
+}
+
+export function applyUpdateEvidence(
+  draft: AppState,
+  evidenceId: ID,
+  patch: { caption?: string; order?: number },
+): Result<true> {
+  const evidence = draft.evidence[evidenceId];
+  if (!evidence || evidence.deleted) {
+    return err({ code: "EVID_MISSING", message: "Evidence not found" });
+  }
+  if (patch.caption !== undefined) evidence.caption = patch.caption;
+  if (patch.order !== undefined) evidence.order = patch.order;
+  return ok(true);
+}
+
+/** Hard-remove evidence attached to a draft/returned report (and caller deletes blob). */
+export function applyRemoveUnsubmittedEvidence(
+  draft: AppState,
+  evidenceId: ID,
+): Result<{ blobKey?: string }> {
+  const evidence = draft.evidence[evidenceId];
+  if (!evidence || evidence.deleted) {
+    return err({ code: "EVID_MISSING", message: "Evidence not found" });
+  }
+  const report = evidence.reportId
+    ? draft.reports[evidence.reportId]
+    : undefined;
+  if (
+    report &&
+    report.status !== "draft" &&
+    report.status !== "returned"
+  ) {
+    return err({
+      code: "EVID_LOCKED",
+      message: "Submitted photos can only be soft-deleted with a reason.",
+    });
+  }
+  const blobKey = evidence.blobKey;
+  delete draft.evidence[evidenceId];
+  return ok({ blobKey });
 }
 
 export function applyApproveEvidence(

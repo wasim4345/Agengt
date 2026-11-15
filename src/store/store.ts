@@ -79,6 +79,7 @@ import {
   applyApproveEvidence,
   applyDeleteExpense,
   applyReleaseReport,
+  applyRemoveUnsubmittedEvidence,
   applyResubmitExpense,
   applyReturnReport,
   applyReviseReport,
@@ -86,6 +87,7 @@ import {
   applySoftDeleteEvidence,
   applyStartReport,
   applySubmitReport,
+  applyUpdateEvidence,
   applyUpdateExpense,
 } from "./actions/execution";
 import {
@@ -327,7 +329,15 @@ export type OsStore = {
     blobKey?: string;
     thumb?: string;
     caption?: string;
+    order?: number;
   }) => Result<{ evidenceId: ID }>;
+  updateEvidence: (
+    evidenceId: ID,
+    patch: { caption?: string; order?: number },
+  ) => Result<true>;
+  removeUnsubmittedEvidence: (
+    evidenceId: ID,
+  ) => Result<{ blobKey?: string }>;
   approveEvidence: (
     evidenceId: ID,
     audience: "client" | "marcom",
@@ -1461,6 +1471,30 @@ export const useOsStore = create<OsStore>((set, get) => {
           action: "addEvidenceMeta",
           summary: `Uploaded evidence ${input.fileName}`,
           programmeId: input.programmeId,
+        },
+      ),
+
+    updateEvidence: (evidenceId, patch) =>
+      runMutation(
+        "updateEvidence",
+        (draft) => applyUpdateEvidence(draft, evidenceId, patch),
+        {
+          entity: "Evidence",
+          entityId: evidenceId,
+          action: "updateEvidence",
+          summary: `Updated evidence ${evidenceId}`,
+        },
+      ),
+
+    removeUnsubmittedEvidence: (evidenceId) =>
+      runMutation(
+        "removeUnsubmittedEvidence",
+        (draft) => applyRemoveUnsubmittedEvidence(draft, evidenceId),
+        {
+          entity: "Evidence",
+          entityId: evidenceId,
+          action: "removeUnsubmittedEvidence",
+          summary: `Removed unsubmitted evidence ${evidenceId}`,
         },
       ),
 

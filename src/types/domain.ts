@@ -282,6 +282,8 @@ export interface ReportContent {
   startups?: number;
   /** Period values for programme KPIs (P-CTX-01). */
   kpiValues?: { kpiId: ID; value: number }[];
+  /** Doc 09: manager marks report as covering an event (photos section). */
+  isEvent?: boolean;
   observations: string; // INTERNAL
   additionalRemarks: string; // INTERNAL
   clientSummary: string; // shown to client/MarCom after release
@@ -325,6 +327,8 @@ export interface Evidence {
   blobKey?: string;
   thumb?: string; // data URL (images)
   caption?: string;
+  /** Doc 09: photo order within a report. */
+  order?: number;
   uploadedBy: ID;
   uploadedAt: ISODateTime;
   clientApproved: boolean;
@@ -464,6 +468,8 @@ export interface AppMeta {
     reallocLeadershipAmount: number /*100000*/;
     upcomingDays: number /*14*/;
     staleReportDays: number /*14*/;
+    /** Doc 09: block submit when event has 0 photos. Default false. */
+    requireEventPhotos: boolean;
   };
 }
 
@@ -515,7 +521,7 @@ export const STORAGE_KEYS = {
   snapshots: "iimcip-os:v1:snapshots",
 } as const;
 
-export const SEED_VERSION = "2.0.0";
+export const SEED_VERSION = "2.1.0";
 export const CURRENT_SCHEMA_VERSION = 2 as const;
 export const DEFAULT_DEMO_DATE = "2026-11-12";
 

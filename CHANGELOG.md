@@ -1,5 +1,15 @@
 # Changelog
 
+## M7b / M9b — Budget vs cost & event photos (doc 09) (2026-11-15)
+
+- Activity workspace **BudgetStrip**: Budget approved · Cost incurred · Surplus/Deficit with utilisation bar and alerts
+- Report form **Event photos** (IndexedDB blobs, downscale, captions, soft/hard validation via `requireEventPhotos`)
+- PM dashboard **Budget vs cost by activity** chart + table (`manager.budgetVsCostByActivity`)
+- Leadership **Overall current surplus** KPI, programme Cost/Surplus columns, budget-vs-cost financial chart
+- Finance selectors: `surplus`, `utilisation`, `alertLevel`, `portfolioSurplus`, `previewActivityAfterReport`
+- Seed 2.1.0: A07 ~92%, A08 deficit, P5 programme deficit, 7 outreach event photos; integrity surplus checks
+- Tests: doc 09 surplus identities, event-photo validation
+
 ## M10 — Reports centre (2026-11-12)
 
 - Reports Centre `/reports`: 7 live report previews from `selectors/reports`

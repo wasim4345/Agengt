@@ -5,7 +5,75 @@ import {
   programmeProgress,
   upcomingActivities,
 } from "./core";
-import { programmeFinancials } from "./finance";
+import { activityFinancials, programmeFinancials } from "./finance";
+
+export type BudgetVsCostRow = {
+  activityId: ID | null;
+  code: string;
+  name: string;
+  budget: number;
+  cost: number;
+  surplus: number;
+  pctUsed: number | null;
+  alert: "ok" | "warning" | "breach";
+  cancelled: boolean;
+  kind: "activity" | "unallocated" | "programme";
+};
+
+/** Doc 09 Feature C — Budget vs cost by activity (plan order + totals). */
+export function budgetVsCostByActivity(
+  state: AppState,
+  programmeId: ID,
+): BudgetVsCostRow[] {
+  const programme = state.programmes[programmeId];
+  if (!programme) return [];
+  const fin = programmeFinancials(state, programmeId);
+  const activities = Object.values(state.activities)
+    .filter((a) => a.programmeId === programmeId)
+    .sort((a, b) => a.sortOrder - b.sortOrder);
+
+  const rows: BudgetVsCostRow[] = activities.map((a) => {
+    const af = activityFinancials(state, a.id);
+    return {
+      activityId: a.id,
+      code: a.code,
+      name: a.name,
+      budget: af.revised,
+      cost: af.reported,
+      surplus: af.surplus,
+      pctUsed: af.utilisation,
+      alert: af.alert,
+      cancelled: a.status === "cancelled",
+      kind: "activity",
+    };
+  });
+
+  rows.push({
+    activityId: null,
+    code: "",
+    name: "Unallocated budget",
+    budget: fin.unallocated,
+    cost: 0,
+    surplus: fin.unallocated,
+    pctUsed: null,
+    alert: "ok",
+    cancelled: false,
+    kind: "unallocated",
+  });
+  rows.push({
+    activityId: null,
+    code: "",
+    name: "Programme current surplus",
+    budget: fin.budget,
+    cost: fin.reported,
+    surplus: fin.surplus,
+    pctUsed: fin.budget === 0 ? null : fin.reported / fin.budget,
+    alert: fin.surplus < 0 ? "breach" : "ok",
+    cancelled: false,
+    kind: "programme",
+  });
+  return rows;
+}
 
 export function myProgrammes(state: AppState, managerId?: ID) {
   const id = managerId ?? state.meta.currentUserId;

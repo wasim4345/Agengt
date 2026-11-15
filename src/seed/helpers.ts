@@ -240,6 +240,7 @@ export function content(
     activityStatus: partial.activityStatus,
     conducted: partial.conducted,
     percentComplete: partial.percentComplete,
+    isEvent: partial.isEvent,
   };
 }
 
@@ -319,6 +320,7 @@ export function addEvidence(
     marcomApproved: boolean;
     caption?: string;
     colour?: string;
+    order?: number;
   },
 ): void {
   const thumb =
@@ -342,5 +344,6 @@ export function addEvidence(
     uploadedAt: ts(opts.demoDate, opts.day),
     clientApproved: opts.clientApproved,
     marcomApproved: opts.marcomApproved,
+    order: opts.order,
   };
 }

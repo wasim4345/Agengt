@@ -12,12 +12,12 @@ import {
   TabsTrigger,
   useToast,
 } from "@/components/ui";
-import { formatINR } from "@/lib/format/inr";
 import { formatDate } from "@/lib/format/dates";
 import { activityFinancials } from "@/selectors/finance";
 import { ImpactPanel } from "@/components/gantt/ImpactPanel";
 import { useOsStore } from "@/store/store";
 import type { ID } from "@/types/domain";
+import { BudgetStrip } from "./BudgetStrip";
 import { EvidenceGrid } from "./EvidenceGrid";
 import { ExpenseTable } from "./ExpenseTable";
 import { HistoryTimeline } from "./HistoryTimeline";
@@ -38,6 +38,17 @@ export function ActivityWorkspace({
   const { push } = useToast();
   const [reportId, setReportId] = useState<ID | null>(null);
   const [returnComment, setReturnComment] = useState("");
+  const [tab, setTab] = useState("update");
+  const [compactMoney, setCompactMoney] = useState(false);
+
+  useEffect(() => {
+    function onResize() {
+      setCompactMoney(window.innerWidth < 640);
+    }
+    onResize();
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
 
   const activity = state.activities[activityId];
   const programme = state.programmes[programmeId];
@@ -96,28 +107,13 @@ export function ActivityWorkspace({
           </div>
           <Badge tone="in-progress">{activity.status}</Badge>
         </div>
-        <div className="mt-3 grid grid-cols-2 gap-2 text-xs sm:grid-cols-5">
-          <div>
-            <p className="text-muted">Revised</p>
-            <p className="font-semibold">{formatINR(fin.revised)}</p>
-          </div>
-          <div>
-            <p className="text-muted">Reported</p>
-            <p className="font-semibold">{formatINR(fin.reported)}</p>
-          </div>
-          <div>
-            <p className="text-muted">Verified</p>
-            <p className="font-semibold">{formatINR(fin.verified)}</p>
-          </div>
-          <div>
-            <p className="text-muted">Pending</p>
-            <p className="font-semibold">{formatINR(fin.pending)}</p>
-          </div>
-          <div>
-            <p className="text-muted">Remaining</p>
-            <p className="font-semibold">{formatINR(fin.remaining)}</p>
-          </div>
-        </div>
+        <BudgetStrip
+          className="mt-4"
+          fin={fin}
+          compact={compactMoney}
+          onCostClick={() => setTab("expenses")}
+          onBudgetClick={() => setTab("expenses")}
+        />
       </header>
 
       {role === "leadership" && submittedReports.length > 0 ? (
@@ -179,7 +175,7 @@ export function ActivityWorkspace({
         </Card>
       ) : null}
 
-      <Tabs defaultValue="update">
+      <Tabs defaultValue="update" value={tab} onValueChange={setTab}>
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="update">Update</TabsTrigger>
@@ -255,7 +251,8 @@ export function ActivityWorkspace({
           )}
         </TabsContent>
 
-        <TabsContent value="expenses" className="mt-4">
+        <TabsContent value="expenses" className="mt-4 space-y-3">
+          <BudgetStrip fin={fin} compact={compactMoney} />
           <ExpenseTable
             programmeId={programmeId}
             activityId={activityId}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { Camera } from "lucide-react";
 import {
   Badge,
   Button,
@@ -20,6 +21,7 @@ import type {
 } from "@/types/domain";
 import { ExpenseTable } from "./ExpenseTable";
 import { EvidenceGrid } from "./EvidenceGrid";
+import { EventPhotosSection } from "./EventPhotosSection";
 
 const STATUSES: ActivityStatus[] = [
   "not_started",
@@ -65,6 +67,17 @@ export function ReportForm({
       )
       .map((e) => e.id);
   }, [state.expenses, reportId, activityId, report]);
+
+  const photoCount = useMemo(
+    () =>
+      Object.values(state.evidence).filter(
+        (e) =>
+          e.reportId === reportId &&
+          e.type === "photograph" &&
+          !e.deleted,
+      ).length,
+    [state.evidence, reportId],
+  );
 
   const liveValidation = useMemo(() => {
     if (!report || !content) return null;
@@ -315,6 +328,17 @@ export function ReportForm({
         </div>
       </details>
 
+      <div id="event-photos-section">
+        <EventPhotosSection
+          programmeId={programmeId}
+          activityId={activityId}
+          reportId={reportId}
+          isEvent={Boolean(content.isEvent)}
+          onIsEventChange={(v) => patch({ isEvent: v })}
+          readOnly={readOnly}
+        />
+      </div>
+
       <details open className="rounded-xl border border-border bg-surface p-4">
         <summary className="cursor-pointer text-sm font-semibold">
           ③ Expense incurred
@@ -486,6 +510,23 @@ export function ReportForm({
       <div className="sticky bottom-0 z-10 flex flex-wrap gap-2 border-t border-border bg-surface/95 py-3 backdrop-blur">
         {!readOnly ? (
           <>
+            <Button
+              variant="ghost"
+              type="button"
+              onClick={() => {
+                document
+                  .getElementById("event-photos-section")
+                  ?.scrollIntoView({ behavior: "smooth", block: "start" });
+              }}
+            >
+              <Camera className="mr-1 h-4 w-4" aria-hidden />
+              Add photos
+              {photoCount > 0 ? (
+                <Badge tone="info" className="ml-1">
+                  {photoCount}
+                </Badge>
+              ) : null}
+            </Button>
             <Button
               variant="secondary"
               onClick={() => {

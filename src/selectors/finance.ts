@@ -9,11 +9,17 @@ export type ActivityFinancials = {
   verified: number;
   pending: number;
   remaining: number;
+  /** Doc 09: R − Rep (alias of remaining). */
+  surplus: number;
   variance: number;
   verifiedVariance: number;
   utilisationReported: number | null;
   utilisationVerified: number | null;
+  /** Doc 09 alias of utilisationReported. */
+  utilisation: number | null;
   alert: "ok" | "warning" | "breach";
+  /** Doc 09: none | warning | breach (maps ok → none). */
+  alertLevel: "none" | "warning" | "breach";
 };
 
 /**
@@ -53,6 +59,8 @@ export function activityFinancials(
   const reported = verified + pending;
   const utilisationReported = revised === 0 ? null : reported / revised;
   const utilisationVerified = revised === 0 ? null : verified / revised;
+  const alert = overspendLevel(reported, revised, state.meta.settings.warnPct);
+  const remaining = revised - reported;
 
   return {
     activityId,
@@ -61,12 +69,15 @@ export function activityFinancials(
     reported,
     verified,
     pending,
-    remaining: revised - reported,
-    variance: revised - reported,
+    remaining,
+    surplus: remaining,
+    variance: remaining,
     verifiedVariance: revised - verified,
     utilisationReported,
     utilisationVerified,
-    alert: overspendLevel(reported, revised, state.meta.settings.warnPct),
+    utilisation: utilisationReported,
+    alert,
+    alertLevel: alert === "ok" ? "none" : alert,
   };
 }
 
@@ -103,6 +114,18 @@ export function programmeFinancials(state: AppState, programmeId: ID) {
     pending += fin.pending;
   }
 
+  let deficitActivityCount = 0;
+  for (const activity of Object.values(state.activities)) {
+    if (activity.programmeId !== programmeId) continue;
+    if (activity.status === "cancelled") continue;
+    if (activityFinancials(state, activity.id).surplus < 0) {
+      deficitActivityCount += 1;
+    }
+  }
+
+  const surplus = budget - reported;
+  const surplusVerified = budget - verified;
+
   return {
     programmeId,
     budget,
@@ -111,13 +134,82 @@ export function programmeFinancials(state: AppState, programmeId: ID) {
     reported,
     verified,
     pending,
-    remaining: budget - reported,
-    surplusOrDeficit: budget - reported,
-    closureSurplus: budget - verified,
+    remaining: surplus,
+    surplus,
+    surplusVerified,
+    deficitActivityCount,
+    surplusOrDeficit: surplus,
+    closureSurplus: surplusVerified,
     alert:
       reported > budget
         ? ("critical" as const)
         : ("ok" as const),
+  };
+}
+
+export type PortfolioSurplus = {
+  budget: number;
+  reported: number;
+  verified: number;
+  surplus: number;
+  surplusVerified: number;
+  programmesInDeficit: number;
+};
+
+/** Doc 09: Σ B − Σ Rep over the given programmes. */
+export function portfolioSurplus(
+  state: AppState,
+  programmeIds: ID[],
+): PortfolioSurplus {
+  let budget = 0;
+  let reported = 0;
+  let verified = 0;
+  let programmesInDeficit = 0;
+  for (const id of programmeIds) {
+    const fin = programmeFinancials(state, id);
+    budget += fin.budget;
+    reported += fin.reported;
+    verified += fin.verified;
+    if (fin.surplus < 0) programmesInDeficit += 1;
+  }
+  return {
+    budget,
+    reported,
+    verified,
+    surplus: budget - reported,
+    surplusVerified: budget - verified,
+    programmesInDeficit,
+  };
+}
+
+/** Preview surplus if draft/unsaved expenses on this report were submitted. */
+export function previewActivityAfterReport(
+  state: AppState,
+  activityId: ID,
+  draftExpenses: { amount: number }[],
+): {
+  reported: number;
+  surplus: number;
+  utilisation: number | null;
+  alert: "ok" | "warning" | "breach";
+  alertLevel: "none" | "warning" | "breach";
+} {
+  const fin = activityFinancials(state, activityId);
+  const extra = draftExpenses.reduce((s, e) => s + Math.max(0, e.amount), 0);
+  const reported = fin.reported + extra;
+  const surplus = fin.revised - reported;
+  const utilisation = fin.revised === 0 ? null : reported / fin.revised;
+  const alert = overspendLevel(
+    reported,
+    fin.revised,
+    state.meta.settings.warnPct,
+  );
+  return {
+    reported,
+    surplus,
+    utilisation,
+    alert,
+    alertLevel: alert === "ok" ? "none" : alert,
   };
 }
 

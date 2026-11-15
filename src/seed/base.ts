@@ -36,6 +36,7 @@ export function buildDirectory(demoDate: ISODate = DEFAULT_DEMO_DATE): Pick<
         reallocLeadershipAmount: 100_000,
         upcomingDays: 14,
         staleReportDays: 14,
+        requireEventPhotos: false,
       },
     },
     users: buildUsers(),

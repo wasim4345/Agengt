@@ -1,5 +1,10 @@
 import type { AppState, ID } from "@/types/domain";
-import { activityFinancials, programmeAllocated } from "./finance";
+import {
+  activityFinancials,
+  portfolioSurplus,
+  programmeAllocated,
+  programmeFinancials,
+} from "./finance";
 
 export type IntegrityCheck = {
   id: string;
@@ -196,6 +201,63 @@ export function runIntegrityChecks(state: AppState): IntegrityReport {
     label: "Client projections omit internal fields",
     ok: leaks.length === 0,
     detail: leaks[0],
+  });
+
+  // Doc 09 §7 — surplus identities
+  const programmeSurplusBreaks: string[] = [];
+  for (const programme of Object.values(state.programmes)) {
+    const fin = programmeFinancials(state, programme.id);
+    let activitySurplus = 0;
+    for (const activity of Object.values(state.activities)) {
+      if (activity.programmeId !== programme.id) continue;
+      if (activity.status === "cancelled") continue;
+      activitySurplus += activityFinancials(state, activity.id).surplus;
+    }
+    const expected = activitySurplus + fin.unallocated;
+    if (Math.abs(fin.surplus - expected) > 0.01) {
+      programmeSurplusBreaks.push(
+        `${programme.code}: surplus ${fin.surplus} ≠ Σ activity ${activitySurplus} + unallocated ${fin.unallocated}`,
+      );
+    }
+  }
+  checks.push({
+    id: "surplus-programme",
+    label: "Programme surplus = Σ activity surplus + unallocated",
+    ok: programmeSurplusBreaks.length === 0,
+    detail: programmeSurplusBreaks[0],
+  });
+
+  const allProgrammeIds = Object.keys(state.programmes);
+  const portfolio = portfolioSurplus(state, allProgrammeIds);
+  let sumProgrammeSurplus = 0;
+  for (const id of allProgrammeIds) {
+    sumProgrammeSurplus += programmeFinancials(state, id).surplus;
+  }
+  checks.push({
+    id: "surplus-portfolio",
+    label: "Portfolio surplus = Σ programme surplus",
+    ok: Math.abs(portfolio.surplus - sumProgrammeSurplus) < 0.01,
+    detail:
+      Math.abs(portfolio.surplus - sumProgrammeSurplus) >= 0.01
+        ? `portfolio ${portfolio.surplus} ≠ Σ ${sumProgrammeSurplus}`
+        : undefined,
+  });
+
+  const photoBreaks: string[] = [];
+  for (const evidence of Object.values(state.evidence)) {
+    if (evidence.type !== "photograph" || evidence.deleted) continue;
+    if (!evidence.blobKey) {
+      photoBreaks.push(`${evidence.id}: missing blobKey`);
+    }
+    if (evidence.reportId && !state.reports[evidence.reportId]) {
+      photoBreaks.push(`${evidence.id}: report missing`);
+    }
+  }
+  checks.push({
+    id: "event-photos",
+    label: "Photograph evidence has blob keys and valid reports",
+    ok: photoBreaks.length === 0,
+    detail: photoBreaks[0],
   });
 
   return {

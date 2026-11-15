@@ -65,7 +65,16 @@ function ensureShape(state: AppState): AppState {
     ...fallback,
     ...state,
     schemaVersion: CURRENT_SCHEMA_VERSION,
-    meta: { ...fallback.meta, ...state.meta },
+    meta: {
+      ...fallback.meta,
+      ...state.meta,
+      settings: {
+        ...fallback.meta.settings,
+        ...state.meta?.settings,
+        requireEventPhotos:
+          state.meta?.settings?.requireEventPhotos ?? false,
+      },
+    },
     users,
     clients,
     offices: state.offices ?? fallback.offices,

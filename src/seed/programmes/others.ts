@@ -217,6 +217,60 @@ export function buildOtherProgrammes(demoDate: ISODate): ProgrammePack {
       ],
       true,
     );
+    // Doc 09: programme in deficit (cost 32L > budget 30L) while portfolio stays positive
+    addExpense(pack, {
+      id: "exp_p5_01",
+      programmeId: pid,
+      activityId: "act_p5_a01",
+      categoryId: ec.marketing,
+      description: "Challenge outreach campaign",
+      day: -180,
+      amount: 4_80_000,
+      status: "verified",
+      verifiedAmount: 4_80_000,
+      demoDate,
+      submittedBy: owner,
+    });
+    addExpense(pack, {
+      id: "exp_p5_02",
+      programmeId: pid,
+      activityId: "act_p5_a02",
+      categoryId: ec.honorarium,
+      description: "Jury honoraria",
+      day: -120,
+      amount: 3_90_000,
+      status: "verified",
+      verifiedAmount: 3_90_000,
+      demoDate,
+      submittedBy: owner,
+    });
+    addExpense(pack, {
+      id: "exp_p5_03",
+      programmeId: pid,
+      activityId: "act_p5_a03",
+      categoryId: ec.venue,
+      description: "Finals venue + prizes",
+      day: -50,
+      amount: 19_50_000,
+      status: "verified",
+      verifiedAmount: 19_50_000,
+      demoDate,
+      submittedBy: owner,
+      overspendFlag: true,
+    });
+    addExpense(pack, {
+      id: "exp_p5_04",
+      programmeId: pid,
+      activityId: "act_p5_a04",
+      categoryId: ec.misc,
+      description: "Closure pack & certificates",
+      day: -35,
+      amount: 3_80_000,
+      status: "verified",
+      verifiedAmount: 3_80_000,
+      demoDate,
+      submittedBy: owner,
+    });
   }
 
   // P6 — SIDBI Seed Fund (active; ~85% grants)

@@ -132,11 +132,57 @@ export function validateSubmitReport(
           .map((e) => e.id)
       : (report.versions[report.versions.length - 1]?.expenseIds ?? []);
 
-  return validateReportContent(state, {
+  const base = validateReportContent(state, {
     type: report.type,
     content: report.draft,
     linkedExpenseIds: linked,
   });
+
+  // Doc 09: event photos soft/hard validation
+  const activity = state.activities[report.activityId];
+  const catName = activity?.categoryId
+    ? state.activityCategories[activity.categoryId]?.name?.toLowerCase() ?? ""
+    : "";
+  const isEventCat =
+    catName.includes("event") ||
+    catName.includes("outreach") ||
+    catName.includes("capacity") ||
+    catName.includes("network") ||
+    catName.includes("market");
+  const treatsAsEvent = Boolean(report.draft.isEvent) || isEventCat;
+  const photoCount = Object.values(state.evidence).filter(
+    (e) =>
+      e.reportId === reportId &&
+      e.type === "photograph" &&
+      !e.deleted,
+  ).length;
+  const issues = [...base.errors, ...base.warnings];
+  if (
+    treatsAsEvent &&
+    report.draft.activityStatus === "completed" &&
+    photoCount === 0
+  ) {
+    if (state.meta.settings.requireEventPhotos) {
+      issues.push(
+        issue(
+          "E",
+          "RPT_EVENT_PHOTOS",
+          "Event photos are required before submit.",
+          "eventPhotos",
+        ),
+      );
+    } else {
+      issues.push(
+        issue(
+          "W",
+          "RPT_EVENT_PHOTOS",
+          "No event photos attached — you can submit anyway.",
+          "eventPhotos",
+        ),
+      );
+    }
+  }
+  return splitIssues(issues);
 }
 
 /** One final thread per activity (revisable). */

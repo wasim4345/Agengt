@@ -4,7 +4,12 @@ import {
   orgProgress,
   programmeProgress,
 } from "./core";
-import { activityFinancials, programmeFinancials } from "./finance";
+import {
+  activityFinancials,
+  portfolioSurplus,
+  programmeFinancials,
+  type PortfolioSurplus,
+} from "./finance";
 import { dayDiff } from "@/lib/rules/dates";
 import { milestoneHealth } from "@/lib/rules/dependencies";
 
@@ -75,6 +80,43 @@ export function kpis(state: AppState, filters?: LeadershipFilters) {
   };
 }
 
+/** Doc 09 Feature D — overall current surplus for filtered portfolio. */
+export function overallSurplus(
+  state: AppState,
+  filters?: LeadershipFilters,
+): PortfolioSurplus & {
+  programmes: {
+    id: ID;
+    code: string;
+    name: string;
+    budget: number;
+    cost: number;
+    surplus: number;
+  }[];
+} {
+  const programmes = Object.values(state.programmes).filter((p) =>
+    matchesFilters(state, p.id, filters),
+  );
+  const base = portfolioSurplus(
+    state,
+    programmes.map((p) => p.id),
+  );
+  return {
+    ...base,
+    programmes: programmes.map((p) => {
+      const fin = programmeFinancials(state, p.id);
+      return {
+        id: p.id,
+        code: p.code,
+        name: p.name,
+        budget: fin.budget,
+        cost: fin.reported,
+        surplus: fin.surplus,
+      };
+    }),
+  };
+}
+
 export function programmeRows(state: AppState, filters?: LeadershipFilters) {
   return Object.values(state.programmes)
     .filter((p) => matchesFilters(state, p.id, filters))
@@ -98,9 +140,11 @@ export function programmeRows(state: AppState, filters?: LeadershipFilters) {
         stateName: p.officeId ? state.offices[p.officeId]?.state : undefined,
         managerId: p.managerId,
         manager: state.users[p.managerId]?.name,
+        budget: fin.budget,
+        costIncurred: fin.reported,
+        surplus: fin.surplus,
         status: p.status,
         progress,
-        budget: fin.budget,
         verified: fin.verified,
         utilised,
         delayed,
@@ -122,6 +166,9 @@ export function financialOverview(state: AppState, filters?: LeadershipFilters) 
       return {
         programmeId: p.id,
         code: p.code,
+        budget: fin.budget,
+        cost: fin.reported,
+        surplus: fin.surplus,
         verified: fin.verified,
         pending: fin.pending,
         remaining: Math.max(0, fin.remaining),

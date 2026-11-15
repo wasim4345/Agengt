@@ -189,6 +189,7 @@ export function buildReport(
           verified: fin.verified,
           pending: fin.pending,
           unallocated: fin.unallocated,
+          surplus: fin.surplus,
         };
       });
       const totals = rows.reduce(
@@ -197,9 +198,10 @@ export function buildReport(
           acc.reported += Number(r.reported);
           acc.verified += Number(r.verified);
           acc.pending += Number(r.pending);
+          acc.surplus += Number(r.surplus);
           return acc;
         },
-        { approved: 0, reported: 0, verified: 0, pending: 0 },
+        { approved: 0, reported: 0, verified: 0, pending: 0, surplus: 0 },
       );
       return {
         id: reportId,
@@ -212,6 +214,7 @@ export function buildReport(
           "verified",
           "pending",
           "unallocated",
+          "surplus",
         ],
         rows,
         totals,
@@ -298,12 +301,17 @@ export function buildReport(
           reported: fin.reported,
           verified: fin.verified,
           pending: fin.pending,
+          surplus: fin.surplus,
         };
       });
 
       const useScoped = Boolean(
         params.programmeId || params.dateFrom || params.dateTo,
       );
+      const surplusTile = leadership.overallSurplus(state, {
+        dateFrom: params.dateFrom,
+        dateTo: params.dateTo,
+      });
       const totals = useScoped
         ? {
             programmes: rows.length,
@@ -322,6 +330,7 @@ export function buildReport(
               (s, r) => s + (Number(r.approved) - Number(r.reported)),
               0,
             ),
+            surplus: rows.reduce((s, r) => s + Number(r.surplus), 0),
             delayed: ids.reduce(
               (s, id) => s + delayedActivities(state, id).length,
               0,
@@ -343,6 +352,7 @@ export function buildReport(
             verifiedExpenditure: kpis.verifiedExpenditure,
             reportedExpenditure: kpis.reportedExpenditure,
             remaining: kpis.remaining,
+            surplus: surplusTile.surplus,
             delayed: kpis.delayedActivities,
             overallProgress: Math.round(kpis.overallProgress * 10) / 10,
           };
@@ -360,6 +370,7 @@ export function buildReport(
           "reported",
           "verified",
           "pending",
+          "surplus",
         ],
         rows,
         totals,

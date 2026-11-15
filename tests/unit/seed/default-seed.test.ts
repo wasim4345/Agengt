@@ -58,6 +58,9 @@ describe("default seed (doc 08 §4)", () => {
       "cycles:true",
       "finance-identity:true",
       "visibility:true",
+      "surplus-programme:true",
+      "surplus-portfolio:true",
+      "event-photos:true",
     ]);
     expect(report.ok).toBe(true);
   });
