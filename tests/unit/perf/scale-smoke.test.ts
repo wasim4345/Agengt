@@ -88,7 +88,9 @@ function inflate(
  * (see README).
  */
 describe("M12 scale smoke", () => {
-  it("constructs 60×500 and runs portfolio selectors under 8s", () => {
+  it(
+    "constructs 60×500 and runs portfolio selectors under 8s",
+    () => {
     const base = buildDefaultSeed("2026-11-12");
     const store = createTestStore(base);
     const draft = structuredClone(store.getState().state);
@@ -112,7 +114,8 @@ describe("M12 scale smoke", () => {
     expect(sampleFin.allocated).toBeGreaterThan(0);
     // Soft budget for CI VMs; local machines are typically much faster.
     expect(elapsed).toBeLessThan(8000);
-  });
+  },
+  30_000);
 
   it("demo-sized portfolio (seed + extras) stays under 200ms for KPIs", () => {
     const store = createTestStore(buildDefaultSeed("2026-11-12"));

@@ -1,11 +1,15 @@
 # Changelog
 
-## M15 — Roles, FY portfolio, intelligence (Amendment 10) — in progress (2026-11-15)
+## M15 — Roles, FY portfolio, intelligence (Amendment 10) (2026-11-15)
 
 - **§0 Audit:** `AMENDMENT_AUDIT.md`
-- **§2 Four roles:** `leadership` · `programme_lead` · `programme_manager` · `marcom` (finance/client removed from switcher); `Programme.leadId`; Lead/Leadership expense verify; schema v3 migration
-- **§3 FY portfolio:** Indian FY selector (`?fy=`), `classifyProgramme`, Completed/Ongoing/Upcoming cards + Lead filter on Leadership dashboard
-- Remaining: workspace A/B/C layers, Programme + Institutional Intelligence engines, integrity/E2E polish
+- **§2 Four roles:** `leadership` · `programme_lead` · `programme_manager` · `marcom`; `Programme.leadId`; Lead/Leadership expense verify; schema v3
+- **§3 FY portfolio:** Indian FY selector (`?fy=`), `classifyProgramme`, Completed/Ongoing/Upcoming cards → dedicated `/leadership/listing/` (search/sort)
+- **Portfolio Impact removed** from Leadership dashboard (master prompt §3F)
+- **§4 Workspace layers:** A Financials · B Operational · C Programme Intelligence
+- **§5 Programme Intelligence:** deterministic OPS/FIN/RSK/PRF rules in `selectors/intelligence.ts`; Generate/Refresh; dismiss/ack; evidence kinds
+- **§6 Institutional Intelligence:** `/institutional/` Leadership-only; sections A–E + INS-01…09 + intervention centre
+- Store: `recordInsightRun` / `setInsightState`; insight runs for New/Resolved diffs
 
 ## M7b / M9b — Budget vs cost & event photos (doc 09) (2026-11-15)
 

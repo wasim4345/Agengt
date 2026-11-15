@@ -43,7 +43,6 @@ import {
 } from "@/lib/leadershipFilters";
 import * as leadership from "@/selectors/leadership";
 import type { LeadershipFilters } from "@/selectors/leadership";
-import * as kpiSel from "@/selectors/kpi";
 import { navigate } from "@/lib/basePath";
 import { useOsStore } from "@/store/store";
 import type { ProgrammeStatus, SponsorType } from "@/types/domain";
@@ -117,7 +116,6 @@ function LeadershipInner() {
   );
   const milestones = leadership.upcomingMilestones(state);
   const risks = leadership.riskAlerts(state);
-  const impact = kpiSel.portfolioImpact(state);
   const bySponsor = leadership.programmesBySponsorType(state, filtersWithFy);
   const byOffice = leadership.programmesByOffice(state, filtersWithFy);
 
@@ -205,22 +203,18 @@ function LeadershipInner() {
             key={key}
             type="button"
             data-testid={`fy-class-${key}`}
-            className={
-              filters.classification === key
-                ? "rounded-xl border border-primary bg-primary/5 p-4 text-left"
-                : "rounded-xl border border-border bg-surface p-4 text-left hover:bg-background"
-            }
-            onClick={() =>
-              setFilters({
+            className="rounded-xl border border-border bg-surface p-4 text-left hover:border-primary hover:bg-primary/5"
+            onClick={() => {
+              const q = searchParamsFromFilters({
                 ...filtersWithFy,
-                classification:
-                  filters.classification === key ? undefined : key,
-              })
-            }
+                classification: key,
+              }).toString();
+              navigate(`/leadership/listing/${q ? `?${q}` : ""}`);
+            }}
           >
             <p className="text-xs uppercase tracking-wide text-muted">{label}</p>
             <p className="mt-1 text-2xl font-semibold tabular-nums">{count}</p>
-            <p className="text-xs text-muted">FY {filtersWithFy.fy}</p>
+            <p className="text-xs text-muted">FY {filtersWithFy.fy} · Open listing</p>
           </button>
         ))}
       </div>
@@ -434,35 +428,6 @@ function LeadershipInner() {
           ) : null}
         </CardContent>
       </Card>
-
-      {impact.length > 0 ? (
-        <Card className="mb-4" data-testid="portfolio-impact-strip">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base">Portfolio impact</CardTitle>
-            <p className="text-xs text-muted">
-              Cross-programme KPI targets vs achieved (submitted + released)
-            </p>
-          </CardHeader>
-          <CardContent className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {impact.map((row) => (
-              <div key={row.name} className="rounded-lg border border-border p-3">
-                <p className="text-xs text-muted">{row.name}</p>
-                <p className="text-lg font-semibold">
-                  {kpiSel.formatKpiValue(row.unit, row.achieved)}
-                  <span className="text-sm font-normal text-muted">
-                    {" "}
-                    / {kpiSel.formatKpiValue(row.unit, row.target)}
-                  </span>
-                </p>
-                <p className="text-[11px] text-muted">
-                  {row.programmeCount} programme
-                  {row.programmeCount === 1 ? "" : "s"}
-                </p>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      ) : null}
 
       <div
         className="mb-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4"

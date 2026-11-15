@@ -7,3 +7,5 @@ export * as marcom from "./marcom";
 export * as financeRole from "./financeRole";
 export * as reports from "./reports";
 export * as integrity from "./integrity";
+export * as intelligence from "./intelligence";
+export * as institutional from "./institutional";

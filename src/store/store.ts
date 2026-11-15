@@ -115,9 +115,19 @@ import {
   applyUpsertAchievement,
   applyUpsertStartup,
 } from "./actions/startups";
+import {
+  applyRecordInsightRun,
+  applySetInsightState,
+} from "./actions/insights";
 import type { RevisionLine } from "@/lib/rules/budget";
 import { closureChecks } from "@/lib/rules/closure";
-import type { Achievement, ProgrammeStartup } from "@/types/domain";
+import type {
+  Achievement,
+  Insight,
+  InsightSeverity,
+  InsightState,
+  ProgrammeStartup,
+} from "@/types/domain";
 
 enablePatches();
 
@@ -423,6 +433,18 @@ export type OsStore = {
     approved: boolean,
   ) => Result<true>;
   deleteAchievement: (achievementId: ID) => Result<true>;
+
+  /** Programme / Institutional Intelligence */
+  recordInsightRun: (input: {
+    scope: "programme" | "institution";
+    programmeId?: ID;
+    items: Insight[];
+  }) => Result<{ runId: ID }>;
+  setInsightState: (input: {
+    key: string;
+    status: InsightState["status"];
+    severity?: InsightSeverity;
+  }) => Result<InsightState>;
 };
 
 let persistTimer: ReturnType<typeof setTimeout> | null = null;
@@ -1774,6 +1796,31 @@ export const useOsStore = create<OsStore>((set, get) => {
           entityId: achievementId,
           action: "deleteAchievement",
           summary: `Deleted achievement ${achievementId}`,
+        },
+      ),
+
+    recordInsightRun: (input) =>
+      runMutation(
+        "recordInsightRun",
+        (draft) => applyRecordInsightRun(draft, input),
+        {
+          entity: "InsightRun",
+          entityId: input.programmeId ?? "institution",
+          action: "recordInsightRun",
+          summary: `Recorded ${input.scope} insight run (${input.items.length} items)`,
+          programmeId: input.programmeId,
+        },
+      ),
+
+    setInsightState: (input) =>
+      runMutation(
+        "setInsightState",
+        (draft) => applySetInsightState(draft, input),
+        {
+          entity: "InsightState",
+          entityId: input.key,
+          action: "setInsightState",
+          summary: `Insight ${input.key} → ${input.status}`,
         },
       ),
   };

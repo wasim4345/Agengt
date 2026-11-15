@@ -11,6 +11,7 @@ import { DependencyEditor } from "@/components/programme/DependencyEditor";
 import { LifecyclePanel } from "@/components/programme/LifecyclePanel";
 import { MilestoneEditor } from "@/components/programme/MilestoneEditor";
 import { StageRibbon } from "@/components/programme/StageRibbon";
+import { ProgrammeIntelligencePanel } from "@/components/intelligence/ProgrammeIntelligencePanel";
 import { programmeFinancials } from "@/selectors/finance";
 import {
   Badge,
@@ -48,7 +49,14 @@ function ProgrammeViewInner() {
   const saveProgrammeAsTemplate = useOsStore((s) => s.saveProgrammeAsTemplate);
   const { push } = useToast();
   const [tplName, setTplName] = useState("");
-  const [layer, setLayer] = useState<WorkspaceLayer>("operational");
+  const layerParam = search.get("layer");
+  const initialLayer: WorkspaceLayer =
+    layerParam === "financials" ||
+    layerParam === "operational" ||
+    layerParam === "intelligence"
+      ? layerParam
+      : "operational";
+  const [layer, setLayer] = useState<WorkspaceLayer>(initialLayer);
   const role = state.meta.currentRole;
   const canVerify =
     role === "leadership" || role === "programme_lead";
@@ -386,19 +394,7 @@ function ProgrammeViewInner() {
       ) : null}
 
       {layer === "intelligence" ? (
-        <Card data-testid="layer-intelligence">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base">Programme Intelligence</CardTitle>
-            <p className="text-xs text-muted">
-              Rule-based analysis · Generate / Refresh lands in the next step
-            </p>
-          </CardHeader>
-          <CardContent className="text-sm text-muted">
-            Insights for this programme (operational, financial, risk,
-            performance, recommended actions) will appear here. No AI — store
-            rules only.
-          </CardContent>
-        </Card>
+        <ProgrammeIntelligencePanel programmeId={programme.id} />
       ) : null}
     </>
   );
