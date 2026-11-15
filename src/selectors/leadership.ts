@@ -12,17 +12,40 @@ import {
 } from "./finance";
 import { dayDiff } from "@/lib/rules/dates";
 import { milestoneHealth } from "@/lib/rules/dependencies";
+import {
+  classifyProgramme,
+  type ProgrammeClassification,
+} from "@/lib/classifyProgramme";
+import { fyContaining, parseFyLabel, type FinancialYear } from "@/lib/fy";
 
 export type LeadershipFilters = {
   categoryId?: ID;
   clientId?: ID;
   managerId?: ID;
+  leadId?: ID;
   officeId?: ID;
   sponsorType?: string;
   status?: ProgrammeStatus;
   dateFrom?: string;
   dateTo?: string;
+  /** Indian FY label e.g. 2026-27 */
+  fy?: string;
+  /** Quick filter from summary cards */
+  classification?: Exclude<ProgrammeClassification, "other">;
+  /** D-4: when true, expenditure uses expenses dated inside the FY only */
+  spendInFyOnly?: boolean;
 };
+
+export function resolveFy(
+  state: AppState,
+  filters?: LeadershipFilters,
+): FinancialYear {
+  if (filters?.fy) {
+    const parsed = parseFyLabel(filters.fy);
+    if (parsed) return parsed;
+  }
+  return fyContaining(state.meta.demoDate);
+}
 
 function matchesFilters(
   state: AppState,
@@ -35,6 +58,7 @@ function matchesFilters(
   if (filters.categoryId && p.categoryId !== filters.categoryId) return false;
   if (filters.clientId && p.clientId !== filters.clientId) return false;
   if (filters.managerId && p.managerId !== filters.managerId) return false;
+  if (filters.leadId && p.leadId !== filters.leadId) return false;
   if (filters.officeId && p.officeId !== filters.officeId) return false;
   if (filters.sponsorType) {
     const type = state.clients[p.clientId]?.type;
@@ -43,7 +67,32 @@ function matchesFilters(
   if (filters.status && p.status !== filters.status) return false;
   if (filters.dateFrom && dayDiff(p.endDate, filters.dateFrom) > 0) return false;
   if (filters.dateTo && dayDiff(filters.dateTo, p.startDate) > 0) return false;
+
+  const fy = resolveFy(state, filters);
+  const classification = classifyProgramme(p, fy, state.meta.demoDate);
+  if (filters.classification && classification !== filters.classification) {
+    return false;
+  }
+  // Default portfolio scope: exclude "other" when an FY is selected
+  if (filters.fy && !filters.classification && classification === "other") {
+    if (filters.status !== "cancelled") return false;
+  }
   return true;
+}
+
+export function portfolioClassificationCounts(
+  state: AppState,
+  filters?: LeadershipFilters,
+) {
+  const fy = resolveFy(state, filters);
+  const base = { ...filters, classification: undefined };
+  const counts = { completed: 0, ongoing: 0, upcoming: 0, other: 0 };
+  for (const p of Object.values(state.programmes)) {
+    if (!matchesFilters(state, p.id, base)) continue;
+    const c = classifyProgramme(p, fy, state.meta.demoDate);
+    counts[c] += 1;
+  }
+  return counts;
 }
 
 export function kpis(state: AppState, filters?: LeadershipFilters) {
@@ -140,6 +189,13 @@ export function programmeRows(state: AppState, filters?: LeadershipFilters) {
         stateName: p.officeId ? state.offices[p.officeId]?.state : undefined,
         managerId: p.managerId,
         manager: state.users[p.managerId]?.name,
+        leadId: p.leadId,
+        lead: state.users[p.leadId]?.name,
+        classification: classifyProgramme(
+          p,
+          resolveFy(state, filters),
+          state.meta.demoDate,
+        ),
         budget: fin.budget,
         costIncurred: fin.reported,
         surplus: fin.surplus,

@@ -48,6 +48,8 @@ import { navigate } from "@/lib/basePath";
 import { useOsStore } from "@/store/store";
 import type { ProgrammeStatus, SponsorType } from "@/types/domain";
 import { IDS } from "@/seed/ids";
+import { fyContaining, listFinancialYears } from "@/lib/fy";
+import { resolveFy } from "@/selectors/leadership";
 
 function Kpi({
   label,
@@ -91,15 +93,33 @@ function LeadershipInner() {
     router.replace(q ? `${pathname}?${q}` : pathname);
   }
 
-  const kpis = leadership.kpis(state, filters);
-  const rows = leadership.programmeRows(state, filters);
-  const financial = leadership.financialOverview(state, filters);
-  const surplus = leadership.overallSurplus(state, filters);
+  const activeFy = resolveFy(state, filters);
+  const fyOptions = useMemo(() => {
+    const programmes = Object.values(state.programmes);
+    if (programmes.length === 0) return [fyContaining(state.meta.demoDate)];
+    const starts = programmes.map((p) => p.startDate).sort();
+    const ends = programmes.map((p) => p.endDate).sort();
+    return listFinancialYears(starts[0]!, ends[ends.length - 1]!);
+  }, [state.programmes, state.meta.demoDate]);
+
+  const filtersWithFy = useMemo(
+    () => ({ ...filters, fy: filters.fy ?? activeFy.label }),
+    [filters, activeFy.label],
+  );
+
+  const kpis = leadership.kpis(state, filtersWithFy);
+  const rows = leadership.programmeRows(state, filtersWithFy);
+  const financial = leadership.financialOverview(state, filtersWithFy);
+  const surplus = leadership.overallSurplus(state, filtersWithFy);
+  const classCounts = leadership.portfolioClassificationCounts(
+    state,
+    filtersWithFy,
+  );
   const milestones = leadership.upcomingMilestones(state);
   const risks = leadership.riskAlerts(state);
   const impact = kpiSel.portfolioImpact(state);
-  const bySponsor = leadership.programmesBySponsorType(state, filters);
-  const byOffice = leadership.programmesByOffice(state, filters);
+  const bySponsor = leadership.programmesBySponsorType(state, filtersWithFy);
+  const byOffice = leadership.programmesByOffice(state, filtersWithFy);
 
   const byCategory = useMemo(() => {
     const map = new Map<string, number>();
@@ -173,8 +193,59 @@ function LeadershipInner() {
         }
       />
 
+      <div className="mb-4 grid gap-3 sm:grid-cols-3">
+        {(
+          [
+            ["completed", "Completed", classCounts.completed],
+            ["ongoing", "Ongoing", classCounts.ongoing],
+            ["upcoming", "Upcoming", classCounts.upcoming],
+          ] as const
+        ).map(([key, label, count]) => (
+          <button
+            key={key}
+            type="button"
+            data-testid={`fy-class-${key}`}
+            className={
+              filters.classification === key
+                ? "rounded-xl border border-primary bg-primary/5 p-4 text-left"
+                : "rounded-xl border border-border bg-surface p-4 text-left hover:bg-background"
+            }
+            onClick={() =>
+              setFilters({
+                ...filtersWithFy,
+                classification:
+                  filters.classification === key ? undefined : key,
+              })
+            }
+          >
+            <p className="text-xs uppercase tracking-wide text-muted">{label}</p>
+            <p className="mt-1 text-2xl font-semibold tabular-nums">{count}</p>
+            <p className="text-xs text-muted">FY {filtersWithFy.fy}</p>
+          </button>
+        ))}
+      </div>
+
       <Card className="mb-4">
         <CardContent className="flex flex-wrap items-end gap-3 py-3">
+          <Field label="Financial year" className="min-w-[10rem]">
+            <select
+              data-testid="filter-fy"
+              className="w-full rounded-md border border-border bg-surface px-3 py-2 text-sm"
+              value={filtersWithFy.fy}
+              onChange={(e) =>
+                setFilters({
+                  ...filters,
+                  fy: e.target.value || undefined,
+                })
+              }
+            >
+              {fyOptions.map((fy) => (
+                <option key={fy.label} value={fy.label}>
+                  FY {fy.label}
+                </option>
+              ))}
+            </select>
+          </Field>
           <Field label="Category" className="min-w-[10rem]">
             <select
               data-testid="filter-category"
@@ -266,7 +337,29 @@ function LeadershipInner() {
               ))}
             </select>
           </Field>
-          <Field label="Manager" className="min-w-[10rem]">
+          <Field label="Programme Lead" className="min-w-[10rem]">
+            <select
+              data-testid="filter-lead"
+              className="w-full rounded-md border border-border bg-surface px-3 py-2 text-sm"
+              value={filters.leadId ?? ""}
+              onChange={(e) =>
+                setFilters({
+                  ...filters,
+                  leadId: e.target.value || undefined,
+                })
+              }
+            >
+              <option value="">All</option>
+              {Object.values(state.users)
+                .filter((u) => u.role === "programme_lead" && u.active)
+                .map((u) => (
+                  <option key={u.id} value={u.id}>
+                    {u.name}
+                  </option>
+                ))}
+            </select>
+          </Field>
+          <Field label="Programme Manager" className="min-w-[10rem]">
             <select
               className="w-full rounded-md border border-border bg-surface px-3 py-2 text-sm"
               value={filters.managerId ?? ""}
@@ -279,7 +372,7 @@ function LeadershipInner() {
             >
               <option value="">All</option>
               {Object.values(state.users)
-                .filter((u) => u.role === "programme_manager")
+                .filter((u) => u.role === "programme_manager" && u.active)
                 .map((u) => (
                   <option key={u.id} value={u.id}>
                     {u.name}
@@ -564,6 +657,9 @@ function LeadershipInner() {
                   <TH>Name</TH>
                   <TH>Category</TH>
                   <TH>Client</TH>
+                  <TH>Lead</TH>
+                  <TH>Manager</TH>
+                  <TH>FY class</TH>
                   <TH>Status</TH>
                   <TH>Progress</TH>
                   <TH>Budget approved</TH>
@@ -594,6 +690,11 @@ function LeadershipInner() {
                       <Badge tone="neutral">{r.category ?? "—"}</Badge>
                     </TD>
                     <TD className="text-xs">{r.client ?? "—"}</TD>
+                    <TD className="text-xs">{r.lead ?? "—"}</TD>
+                    <TD className="text-xs">{r.manager ?? "—"}</TD>
+                    <TD>
+                      <Badge tone="info">{r.classification}</Badge>
+                    </TD>
                     <TD>
                       <Badge tone="in-progress">{r.status}</Badge>
                     </TD>
