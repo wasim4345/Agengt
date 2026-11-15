@@ -494,8 +494,11 @@ export function parseCsvTotals(csv: string): Record<string, number> {
 }
 
 export function catalogueForRole(role: string) {
-  if (role === "client") {
-    return REPORT_CATALOGUE.filter((r) => r.clientSafe);
+  if (role === "marcom") {
+    // MarCom: approved-content reports only (no financial internals in UI)
+    return REPORT_CATALOGUE.filter(
+      (r) => r.id === "client_programme" || r.clientSafe,
+    );
   }
   return REPORT_CATALOGUE;
 }

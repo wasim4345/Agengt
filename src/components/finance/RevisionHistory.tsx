@@ -30,7 +30,8 @@ export function RevisionHistory({ programmeId }: { programmeId: ID }) {
       {revisions.map((r) => {
         const open = expanded === r.id;
         const canFinance =
-          role === "finance" && r.status === "pending_finance";
+          (role === "programme_lead" || role === "leadership") &&
+          r.status === "pending_finance";
         const canLeadership =
           role === "leadership" && r.status === "pending_leadership";
         return (

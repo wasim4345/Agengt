@@ -10,10 +10,9 @@ import { usePathname } from "next/navigation";
 
 const ROLES: Role[] = [
   "leadership",
+  "programme_lead",
   "programme_manager",
-  "client",
   "marcom",
-  "finance",
 ];
 
 export function RoleSwitcher() {

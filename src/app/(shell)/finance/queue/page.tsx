@@ -6,7 +6,7 @@ import { FinanceQueue } from "@/components/finance/FinanceQueue";
 
 export default function FinanceQueuePage() {
   return (
-    <RoleGate allow={["finance"]}>
+    <RoleGate allow={["leadership", "programme_lead"]}>
       <PageHeader
         title="Approval queue"
         description="Verify, partially approve, or reject submitted expenses."

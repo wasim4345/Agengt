@@ -104,7 +104,7 @@ export default function StartupsPage() {
   });
 
   return (
-    <RoleGate allow={["marcom", "leadership", "programme_manager"]}>
+    <RoleGate allow={["marcom", "leadership", "programme_lead", "programme_manager"]}>
       <PageHeader
         title="Startups & achievements"
         description="Participation and wins. MarCom sees selected-or-later and approved achievements only."

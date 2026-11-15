@@ -1,6 +1,7 @@
 import type { AppState, ISODate, Role } from "@/types/domain";
 import {
   DEFAULT_DEMO_DATE,
+  DEFAULT_INTELLIGENCE_SETTINGS,
   SEED_VERSION,
 } from "@/types/domain";
 import { buildActivityCategories, buildCategories, buildExpenseCategories } from "./categories";
@@ -23,7 +24,7 @@ export function buildDirectory(demoDate: ISODate = DEFAULT_DEMO_DATE): Pick<
   | "templates"
 > {
   return {
-    schemaVersion: 2,
+    schemaVersion: 3,
     meta: {
       demoDate,
       currentRole: "leadership" as Role,
@@ -37,6 +38,7 @@ export function buildDirectory(demoDate: ISODate = DEFAULT_DEMO_DATE): Pick<
         upcomingDays: 14,
         staleReportDays: 14,
         requireEventPhotos: false,
+        intelligence: { ...DEFAULT_INTELLIGENCE_SETTINGS },
       },
     },
     users: buildUsers(),
@@ -69,6 +71,8 @@ export function emptyBusinessCollections(): Pick<
   | "delayImpacts"
   | "notifications"
   | "log"
+  | "insightStates"
+  | "insightRuns"
 > {
   return {
     programmes: {},
@@ -89,5 +93,7 @@ export function emptyBusinessCollections(): Pick<
     delayImpacts: {},
     notifications: {},
     log: [],
+    insightStates: {},
+    insightRuns: [],
   };
 }

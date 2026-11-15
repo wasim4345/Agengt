@@ -11,10 +11,9 @@ import type { Role } from "@/types/domain";
 const ROLES: Array<Role | "all"> = [
   "all",
   "leadership",
+  "programme_lead",
   "programme_manager",
-  "finance",
   "marcom",
-  "client",
 ];
 
 export default function ActivityLogPage() {

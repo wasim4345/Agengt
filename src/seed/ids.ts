@@ -8,6 +8,8 @@ export const IDS = {
     kavya: "usr_kavya",
     rohit: "usr_rohit",
     sunita: "usr_sunita",
+    /** Programme Lead — North East portfolio (Amendment 10). */
+    leadNe: "usr_lead_ne",
     priya: "usr_priya",
     rahul: "usr_rahul",
     anita: "usr_anita",

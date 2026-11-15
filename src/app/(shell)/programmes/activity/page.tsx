@@ -27,7 +27,7 @@ function ActivityInner() {
 
 export default function ActivityWorkspacePage() {
   return (
-    <RoleGate allow={["leadership", "programme_manager", "finance"]}>
+    <RoleGate allow={["leadership", "programme_manager", "programme_lead"]}>
       <PageHeader
         title="Activity workspace"
         description="Report updates, expenses, evidence, history, and release workflow."

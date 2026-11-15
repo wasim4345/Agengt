@@ -5,7 +5,7 @@ import { FinanceDashboard } from "@/components/dashboards/FinanceDashboard";
 
 export default function FinanceHomePage() {
   return (
-    <RoleGate allow={["finance"]}>
+    <RoleGate allow={["leadership", "programme_lead", "programme_manager"]}>
       <FinanceDashboard />
     </RoleGate>
   );

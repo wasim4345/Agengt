@@ -28,6 +28,7 @@ export function buildP1(demoDate: ISODate): ProgrammePack {
     categoryId: IDS.categories.incubation,
     clientId: IDS.clients.balmer,
     officeId: IDS.offices.kolkata,
+    leadId: IDS.users.sunita,
     managerId: owner,
     teamIds: [owner, IDS.users.kavya],
     start: -120,

@@ -87,7 +87,7 @@ describe("M9 dashboards — demo steps 1, 2, 9, 11, 12", () => {
 
   it("demo step 11: Client sees only released/approved surface — no money/remarks", () => {
     const store = createTestStore();
-    store.getState().setRole("client");
+    store.getState().setRole("marcom");
     store.getState().setUser(IDS.users.rahul);
     const state = store.getState().state;
 

@@ -211,7 +211,7 @@ describe("M11 — doc 04 §9 edge cases (1–20)", () => {
 
   it("12 Reject/resubmit creates linked draft", () => {
     const store = createTestStore();
-    store.getState().setRole("finance");
+    store.getState().setRole("programme_lead");
     store.getState().setUser(IDS.users.sunita);
     expect(
       store.getState().rejectExpense("exp_p1_13", "Need receipt").ok,
@@ -228,9 +228,11 @@ describe("M11 — doc 04 §9 edge cases (1–20)", () => {
 
   it("13 Client sees released only", () => {
     const store = createTestStore();
-    store.getState().setRole("client");
-    store.getState().setUser(IDS.users.rahul);
-    const released = client.releasedReports(store.getState().state);
+    // Client role removed (Amendment 10); dormant client selectors still work by clientId
+    const released = client.releasedReports(
+      store.getState().state,
+      IDS.clients.balmer,
+    );
     expect(released.length).toBeGreaterThan(0);
     expect(
       released.every((r) => {
@@ -377,8 +379,8 @@ describe("M11 — doc 04 §9 edge cases (1–20)", () => {
     const evidence = Object.values(store.getState().state.evidence).find(
       (e) => e.type === "photograph" && !e.deleted,
     )!;
-    store.getState().setRole("client");
-    store.getState().setUser(IDS.users.rahul);
+    store.getState().setRole("marcom");
+    store.getState().setUser(IDS.users.priya);
     expect(canSoftDeleteEvidence(store.getState().state, evidence.id).ok).toBe(
       false,
     );
@@ -397,7 +399,7 @@ describe("M11 — doc 04 §9 edge cases (1–20)", () => {
       expect(canSoftDeleteEvidence(store.getState().state, invoice.id).ok).toBe(
         false,
       );
-      store.getState().setRole("finance");
+      store.getState().setRole("programme_lead");
       store.getState().setUser(IDS.users.sunita);
       expect(canSoftDeleteEvidence(store.getState().state, invoice.id).ok).toBe(
         true,

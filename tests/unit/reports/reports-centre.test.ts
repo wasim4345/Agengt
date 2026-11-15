@@ -93,12 +93,12 @@ describe("M10 reports centre — demo step 13", () => {
 
   it("client-safe catalogue and report omit forbidden money/remarks keys", () => {
     const store = createTestStore();
-    store.getState().setRole("client");
+    store.getState().setRole("marcom");
     store.getState().setUser(IDS.users.rahul);
     const state = store.getState().state;
 
-    expect(catalogueForRole("client")).toHaveLength(1);
-    expect(catalogueForRole("client")[0]?.id).toBe("client_programme");
+    expect(catalogueForRole("marcom")).toHaveLength(1);
+    expect(catalogueForRole("marcom")[0]?.id).toBe("client_programme");
 
     const report = buildReport(state, "client_programme");
     const json = JSON.stringify(report.sections);

@@ -54,7 +54,7 @@ export default function ApprovalsPage() {
   );
 
   return (
-    <RoleGate allow={["leadership", "finance"]}>
+    <RoleGate allow={["leadership", "programme_lead"]}>
       <PageHeader
         title="Approvals"
         description="Programme activation, budget revisions, and lifecycle decisions."

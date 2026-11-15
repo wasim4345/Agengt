@@ -20,7 +20,8 @@ describe("RoleGate", () => {
 
   it("renders the not-available card and omits children for other roles", () => {
     const store = createTestStore(buildDefaultSeed("2026-11-12"));
-    store.getState().setUser("usr_rahul");
+    store.getState().setRole("marcom");
+    store.getState().setUser("usr_priya");
 
     render(
       <RoleGate allow={["leadership"]}>
@@ -33,7 +34,8 @@ describe("RoleGate", () => {
       screen.getByText("Not available for this role"),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("link", { name: /Go to Client home/i }),
+      screen.getByRole("link", { name: /Go to Marketing/i }),
     ).toBeInTheDocument();
   });
 });
+

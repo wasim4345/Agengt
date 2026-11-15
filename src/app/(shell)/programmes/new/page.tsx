@@ -72,7 +72,7 @@ function NewProgrammeInner() {
 
 export default function NewProgrammePage() {
   return (
-    <RoleGate allow={["programme_manager", "leadership"]}>
+    <RoleGate allow={["programme_manager", "programme_lead", "leadership"]}>
       <PageHeader
         title="New programme"
         description="7-step wizard — templates, blocks, dependencies, budget, submit."

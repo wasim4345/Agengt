@@ -17,7 +17,7 @@ export default function ProgrammesPage() {
   });
 
   return (
-    <RoleGate allow={["leadership", "programme_manager", "finance"]}>
+    <RoleGate allow={["leadership", "programme_manager", "programme_lead"]}>
       <PageHeader
         title={role === "programme_manager" ? "My programmes" : "Programmes"}
         description="Open a programme for budget, structure, or continue a draft wizard."

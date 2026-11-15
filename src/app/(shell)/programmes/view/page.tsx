@@ -249,7 +249,7 @@ function ProgrammeViewInner() {
 
 export default function ProgrammeViewPage() {
   return (
-    <RoleGate allow={["leadership", "programme_manager", "finance"]}>
+    <RoleGate allow={["leadership", "programme_manager", "programme_lead"]}>
       <Suspense fallback={<Skeleton className="h-40 w-full" />}>
         <ProgrammeViewInner />
       </Suspense>

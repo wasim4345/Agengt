@@ -7,7 +7,7 @@ import { Skeleton } from "@/components/ui";
 
 export default function ReportsPage() {
   return (
-    <RoleGate allow={["leadership", "programme_manager", "finance", "client"]}>
+    <RoleGate allow={["leadership", "programme_lead", "programme_manager", "marcom"]}>
       <Suspense fallback={<Skeleton className="h-40 w-full" />}>
         <ReportsCentre />
       </Suspense>

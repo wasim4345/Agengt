@@ -74,6 +74,7 @@ export function buildProgrammeShell(opts: {
   categoryId: ID;
   clientId: ID;
   officeId?: ID;
+  leadId: ID;
   managerId: ID;
   teamIds: ID[];
   start: number;
@@ -88,6 +89,7 @@ export function buildProgrammeShell(opts: {
   keyDeliverables?: string[];
   wizardDraft?: { step: number };
   statusReason?: string;
+  completedAtOffset?: number;
 }): Programme {
   const {
     demoDate,
@@ -95,6 +97,7 @@ export function buildProgrammeShell(opts: {
     end,
     budget,
     status,
+    completedAtOffset,
     ...rest
   } = opts;
   const activeLike =
@@ -102,11 +105,19 @@ export function buildProgrammeShell(opts: {
     status === "completed" ||
     status === "closed" ||
     status === "on_hold";
+  const completedAt =
+    status === "completed" || status === "closed"
+      ? d(
+          demoDate,
+          completedAtOffset ?? end,
+        )
+      : undefined;
   return {
     ...rest,
     startDate: d(demoDate, start),
     endDate: d(demoDate, end),
     baselineEndDate: activeLike ? d(demoDate, end) : undefined,
+    completedAt,
     totalBudget: budget,
     originalBudget: budget,
     objectives:

@@ -8,20 +8,17 @@ import {
 import { buildUsers } from "@/seed/users";
 
 describe("navConfig", () => {
-  it("returns role-specific sidebar items including Data Manager", () => {
+  it("returns role-specific sidebar items including Settings", () => {
     const leadership = navForRole("leadership").map((i) => i.href);
     expect(leadership).toContain("/leadership/");
+    expect(leadership).toContain("/institutional/");
     expect(leadership).toContain("/log/");
     expect(leadership).toContain("/data/");
 
-    const client = navForRole("client").map((i) => i.label);
-    expect(client).toEqual([
-      "Programme overview",
-      "Milestones",
-      "Reports",
-      "Gallery",
-      "Data Manager",
-    ]);
+    const lead = navForRole("programme_lead").map((i) => i.href);
+    expect(lead).toContain("/lead/");
+    expect(lead).toContain("/finance/");
+    expect(lead).not.toContain("/institutional/");
 
     const pm = navForRole("programme_manager").map((i) => i.href);
     expect(pm).toContain("/programmes/new/");
@@ -30,26 +27,27 @@ describe("navConfig", () => {
 
   it("maps each role to a home path", () => {
     expect(ROLE_HOME.leadership).toBe("/leadership/");
-    expect(ROLE_HOME.client).toBe("/client/");
-    expect(ROLE_HOME.finance).toBe("/finance/");
+    expect(ROLE_HOME.programme_lead).toBe("/lead/");
+    expect(ROLE_HOME.programme_manager).toBe("/manager/");
+    expect(ROLE_HOME.marcom).toBe("/marcom/");
   });
 
   it("allows nav routes for the owning role and denies foreign homes", () => {
     expect(isPathAllowed("leadership", "/approvals/")).toBe(true);
-    expect(isPathAllowed("client", "/approvals/")).toBe(false);
-    expect(isPathAllowed("client", "/leadership/")).toBe(false);
-    expect(isPathAllowed("client", "/client/gallery/")).toBe(true);
+    expect(isPathAllowed("leadership", "/institutional/")).toBe(true);
+    expect(isPathAllowed("programme_lead", "/institutional/")).toBe(false);
+    expect(isPathAllowed("marcom", "/leadership/")).toBe(false);
+    expect(isPathAllowed("marcom", "/programmes/view/")).toBe(false);
     expect(isPathAllowed("programme_manager", "/programmes/new/")).toBe(true);
     expect(isPathAllowed("marcom", "/finance/queue/")).toBe(false);
-    expect(isPathAllowed("finance", "/data/")).toBe(true);
+    expect(isPathAllowed("programme_lead", "/data/")).toBe(true);
   });
 
   it("picks the documented default persona per role", () => {
     const users = Object.values(buildUsers());
     expect(defaultPersonaId("leadership", users)).toBe("usr_meera");
     expect(defaultPersonaId("programme_manager", users)).toBe("usr_arjun");
-    expect(defaultPersonaId("client", users)).toBe("usr_rahul");
+    expect(defaultPersonaId("programme_lead", users)).toBe("usr_sunita");
     expect(defaultPersonaId("marcom", users)).toBe("usr_priya");
-    expect(defaultPersonaId("finance", users)).toBe("usr_sunita");
   });
 });

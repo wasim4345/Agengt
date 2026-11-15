@@ -36,7 +36,7 @@ export default function FinanceBudgetsPage() {
   const allocations = activityAllocations(state, programmeId || undefined);
 
   return (
-    <RoleGate allow={["finance"]}>
+    <RoleGate allow={["leadership", "programme_lead", "programme_manager"]}>
       <PageHeader
         title="Budgets"
         description="Approved / reported / verified / pending with revision history."

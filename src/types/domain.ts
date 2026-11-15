@@ -4,12 +4,12 @@ export type ID = string;
 export type ISODate = string; // 2026-11-12
 export type ISODateTime = string;
 
+/** Amendment 10 — exactly four access levels. */
 export type Role =
   | "leadership"
+  | "programme_lead"
   | "programme_manager"
-  | "client"
-  | "marcom"
-  | "finance";
+  | "marcom";
 
 export interface User {
   id: ID;
@@ -17,7 +17,8 @@ export interface User {
   email: string;
   role: Role;
   title: string;
-  clientId?: ID; // for role=client: which organisation they belong to
+  /** Legacy sponsor-contact linkage (dormant; Client role removed). */
+  clientId?: ID;
   avatarColor: string;
   active: boolean;
   /** Leadership only: false = view-only (hide Approve/Release). Default true. */
@@ -103,11 +104,15 @@ export interface Programme {
   categoryId: ID;
   clientId: ID;
   officeId?: ID;
+  /** Amendment 10 — Programme Lead (exactly one). */
+  leadId: ID;
   managerId: ID;
   teamIds: ID[];
   startDate: ISODate;
   endDate: ISODate;
   baselineEndDate?: ISODate;
+  /** Set when status moves to completed/closed. */
+  completedAt?: ISODate;
   totalBudget: number; // current approved total
   originalBudget: number; // frozen at activation (or creation if draft)
   objectives: string;
@@ -125,6 +130,52 @@ export interface Programme {
   createdAt: ISODateTime;
   createdBy: ID;
   wizardDraft?: { step: number }; // only while draft
+}
+
+export type InsightSeverity = "critical" | "high" | "medium" | "low";
+export type InsightCategory =
+  | "operational"
+  | "financial"
+  | "risk"
+  | "performance";
+
+export interface InsightEvidence {
+  label: string;
+  value: string;
+  kind: "fact" | "calculated" | "estimate";
+  ref?: { entity: string; id: string };
+}
+
+/** Deterministic rule-based insight (never marketed as AI). */
+export interface Insight {
+  key: string;
+  ruleId: string;
+  scope: "programme" | "institution";
+  category: InsightCategory;
+  title: string;
+  severity: InsightSeverity;
+  evidence: InsightEvidence[];
+  explanation: string;
+  recommendation: string;
+  suggestedOwnerId?: ID;
+  suggestedDueDate: ISODate;
+  programmeId?: ID;
+}
+
+export interface InsightState {
+  key: string;
+  status: "acknowledged" | "actioned" | "dismissed";
+  by: ID;
+  at: ISODateTime;
+  severityAtDismissal?: InsightSeverity;
+}
+
+export interface InsightRun {
+  id: ID;
+  scope: "programme" | "institution";
+  programmeId?: ID;
+  at: ISODateTime;
+  items: { key: string; severity: InsightSeverity }[];
 }
 
 export type Priority = "low" | "medium" | "high" | "critical";
@@ -470,11 +521,22 @@ export interface AppMeta {
     staleReportDays: number /*14*/;
     /** Doc 09: block submit when event has 0 photos. Default false. */
     requireEventPhotos: boolean;
+    /** Amendment 10 — Programme / Institutional Intelligence thresholds. */
+    intelligence: {
+      staleReportDays: number;
+      overdueHighDays: number;
+      pendingVerifyDays: number;
+      pendingShareWarn: number;
+      scheduleLagPts: number;
+      minSample: number;
+    };
   };
+  /** Optional UI state for financial year label e.g. "2026-27". */
+  selectedFy?: string;
 }
 
 export interface AppState {
-  schemaVersion: 1 | 2;
+  schemaVersion: 1 | 2 | 3;
   meta: AppMeta;
   users: Record<ID, User>;
   clients: Record<ID, Client>;
@@ -501,6 +563,8 @@ export interface AppState {
   delayImpacts: Record<ID, DelayImpact>;
   notifications: Record<ID, Notification>;
   log: LogEntry[];
+  insightStates: Record<string, InsightState>;
+  insightRuns: InsightRun[];
 }
 
 export type ScenarioName =
@@ -521,9 +585,18 @@ export const STORAGE_KEYS = {
   snapshots: "iimcip-os:v1:snapshots",
 } as const;
 
-export const SEED_VERSION = "2.1.0";
-export const CURRENT_SCHEMA_VERSION = 2 as const;
+export const SEED_VERSION = "2.2.0";
+export const CURRENT_SCHEMA_VERSION = 3 as const;
 export const DEFAULT_DEMO_DATE = "2026-11-12";
+
+export const DEFAULT_INTELLIGENCE_SETTINGS = {
+  staleReportDays: 14,
+  overdueHighDays: 14,
+  pendingVerifyDays: 7,
+  pendingShareWarn: 0.15,
+  scheduleLagPts: 15,
+  minSample: 3,
+} as const;
 
 export const STAGE_LABELS: Record<ProgrammeStage, string> = {
   awareness: "Awareness",

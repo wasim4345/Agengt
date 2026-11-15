@@ -195,14 +195,14 @@ test("20-minute demo script (steps 1–13)", async ({ page }) => {
   await expect(page.getByText(/activity|expense|report/i).first()).toBeVisible();
 
   // ——— 8 Finance queue ———
-  await switchRole(page, "finance");
+  await switchRole(page, "programme_lead");
   await page.goto("/finance/queue/");
   await waitForHydration(page);
   await expect(page.getByText(/queue|expense|verify|submitted/i).first()).toBeVisible();
   await page.evaluate(() => {
     const api = window.__IIMCIP_OS__!;
     const store = api.getStore();
-    store.setRole("finance");
+    store.setRole("programme_lead");
     store.setUser("usr_sunita");
     const submitted = Object.values(store.state.expenses).filter(
       (e) => e.status === "submitted",
@@ -237,7 +237,7 @@ test("20-minute demo script (steps 1–13)", async ({ page }) => {
   });
 
   // ——— 11 Client RBAC ———
-  await switchRole(page, "client");
+  await switchRole(page, "marcom");
   await page.goto("/client/");
   await waitForHydration(page);
   await expect(page.getByText(/programme|milestone|report/i).first()).toBeVisible();

@@ -78,12 +78,18 @@ export function applyCreateProgrammeDraft(
     input?.endDate ?? addCalendarDays(startDate, 180);
   const totalBudget = input?.totalBudget ?? 25_00_000;
   const id = nid("prg");
+  const leadId =
+    draft.meta.currentRole === "programme_lead"
+      ? draft.meta.currentUserId
+      : (Object.values(draft.users).find((u) => u.role === "programme_lead" && u.active)
+          ?.id ?? draft.meta.currentUserId);
   const programme: Programme = {
     id,
     code: nextProgrammeCode(draft, categoryId),
     name: input?.name ?? "Untitled programme",
     categoryId,
     clientId,
+    leadId,
     managerId: draft.meta.currentUserId,
     teamIds: [draft.meta.currentUserId],
     startDate,

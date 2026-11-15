@@ -77,8 +77,16 @@ export function budgetVsCostByActivity(
 
 export function myProgrammes(state: AppState, managerId?: ID) {
   const id = managerId ?? state.meta.currentUserId;
+  const role = state.meta.currentRole;
+  const explicit = managerId != null;
   return Object.values(state.programmes)
-    .filter((p) => p.managerId === id)
+    .filter((p) => {
+      if (!explicit && role === "programme_lead") {
+        return p.leadId === id;
+      }
+      if (explicit) return p.managerId === id;
+      return p.managerId === id || p.teamIds.includes(id);
+    })
     .map((p) => ({
       programme: p,
       progress: programmeProgress(state, p.id),

@@ -117,8 +117,8 @@ describe("rules coverage boost", () => {
       ],
       totalAfter: 26_00_000, // changed — should error for realloc
       requestedBy: "usr_arjun",
-      actingRole: "finance",
-      requesterRole: "finance",
+      actingRole: "programme_lead",
+      requesterRole: "programme_lead",
     });
     expect(realloc.errors.some((e) => e.code === "BUD_REALLOC_TOTAL")).toBe(
       true,
@@ -242,7 +242,7 @@ describe("rules coverage boost", () => {
       ],
       totalAfter: 25_00_000,
       requestedBy: "usr_arjun",
-      actingRole: "finance",
+      actingRole: "programme_lead",
       requesterRole: "programme_manager",
     });
     expect(okRealloc.ok).toBe(true);
@@ -254,7 +254,7 @@ describe("rules coverage boost", () => {
       totalAfter: 100,
       requestedBy: "usr_arjun",
       actingRole: "leadership",
-      requesterRole: "finance",
+      requesterRole: "programme_lead",
     });
     expect(belowRep.errors.some((e) => e.code === "BUD_TOTAL_BELOW_REP")).toBe(
       true,
@@ -266,7 +266,7 @@ describe("rules coverage boost", () => {
       lines: [{ activityId: "act_p1_a07", before: 5_00_000, after: 30_00_000 }],
       totalAfter: 25_00_000,
       requestedBy: "usr_arjun",
-      actingRole: "finance",
+      actingRole: "programme_lead",
       requesterRole: "programme_manager",
     });
     expect(sumOver.errors.some((e) => e.code === "BUD_SUM_OVER")).toBe(true);

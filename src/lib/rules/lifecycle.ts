@@ -223,18 +223,35 @@ export function canSoftDeleteEvidence(
       linkedReport.status === "released" ||
       linkedReport.versions.length > 0);
 
+  // MarCom: download approved only — never delete
+  if (role === "marcom" && !state.meta.allowRuleBreaking) {
+    return err({
+      code: "EVID_DELETE_ROLE",
+      message: "MarCom cannot delete evidence.",
+    });
+  }
+
   if (evidence.type === "invoice") {
-    if (role !== "finance" && role !== "leadership" && !state.meta.allowRuleBreaking) {
+    if (
+      role !== "programme_lead" &&
+      role !== "leadership" &&
+      !state.meta.allowRuleBreaking
+    ) {
       return err({
         code: "EVID_INVOICE_ROLE",
-        message: "Only Finance or Leadership can remove invoices.",
+        message: "Only Programme Lead or Leadership can remove invoices.",
       });
     }
     return ok(true);
   }
 
   if (!submitted) {
-    if (!isUploader && role !== "programme_manager" && role !== "leadership") {
+    if (
+      !isUploader &&
+      role !== "programme_manager" &&
+      role !== "programme_lead" &&
+      role !== "leadership"
+    ) {
       return err({
         code: "EVID_DELETE_ROLE",
         message: "Only the uploader can remove unsubmitted evidence.",
@@ -246,11 +263,13 @@ export function canSoftDeleteEvidence(
   if (
     role !== "leadership" &&
     role !== "programme_manager" &&
+    role !== "programme_lead" &&
     !state.meta.allowRuleBreaking
   ) {
     return err({
       code: "EVID_SOFT_DELETE_ROLE",
-      message: "After submit, only Leadership or PM can soft-delete with a reason.",
+      message:
+        "After submit, only Leadership, Lead, or PM can soft-delete with a reason.",
     });
   }
   return ok(true);

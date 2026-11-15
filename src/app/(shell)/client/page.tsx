@@ -5,7 +5,7 @@ import { ClientDashboard } from "@/components/dashboards/ClientDashboard";
 
 export default function ClientHomePage() {
   return (
-    <RoleGate allow={["client"]}>
+    <RoleGate allow={[]}>
       <ClientDashboard />
     </RoleGate>
   );

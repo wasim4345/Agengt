@@ -13,6 +13,9 @@ function inflate(
   const managerId = Object.values(draft.users).find(
     (u) => u.role === "programme_manager",
   )!.id;
+  const leadId = Object.values(draft.users).find(
+    (u) => u.role === "programme_lead",
+  )!.id;
   const clientId = Object.keys(draft.clients)[0]!;
   const categoryId = Object.keys(draft.categories)[0]!;
   const activityCategoryId = Object.keys(draft.activityCategories)[0];
@@ -27,6 +30,7 @@ function inflate(
       name: `Perf Programme ${p}`,
       categoryId,
       clientId,
+      leadId,
       managerId,
       teamIds: [managerId],
       startDate: start,

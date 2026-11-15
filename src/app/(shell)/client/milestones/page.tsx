@@ -19,7 +19,7 @@ export default function ClientMilestonesPage() {
   );
 
   return (
-    <RoleGate allow={["client"]}>
+    <RoleGate allow={[]}>
       <PageHeader
         title="Milestones"
         description="Client-visible milestones only."

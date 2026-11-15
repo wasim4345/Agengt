@@ -37,7 +37,7 @@ export default function TimelinePage() {
     programmes.find((p) => p.id === programmeId) ?? programmes[0];
 
   return (
-    <RoleGate allow={["leadership", "programme_manager"]}>
+    <RoleGate allow={["leadership", "programme_lead", "programme_manager"]}>
       <PageHeader
         title={
           role === "programme_manager"

@@ -149,6 +149,7 @@ export function applyRequestClosure(
   const programme = draft.programmes[programmeId]!;
   if (programme.status === "active") {
     programme.status = "completed";
+    programme.completedAt = draft.meta.demoDate;
   }
   const approvalId = createApproval(draft, {
     programmeId,
@@ -208,6 +209,7 @@ export function applyMarkProgrammeCompletedIfReady(
   );
   if (resolved && allTerminal) {
     programme.status = "completed";
+    programme.completedAt = draft.meta.demoDate;
     return ok({ completed: true });
   }
   return ok({ completed: false });
@@ -345,6 +347,7 @@ export function applyDecideLifecycle(
         });
       }
       programme.status = "closed";
+      programme.completedAt = programme.completedAt ?? draft.meta.demoDate;
       break;
     }
     default:

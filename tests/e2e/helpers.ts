@@ -11,9 +11,8 @@ export async function switchRole(
   role:
     | "leadership"
     | "programme_manager"
-    | "client"
     | "marcom"
-    | "finance",
+    | "programme_lead",
   userId?: string,
 ) {
   await waitForHydration(page);
@@ -32,13 +31,11 @@ export async function switchRole(
     },
     { role, userId },
   );
-  // Trigger client navigation home for the role
   const homes: Record<string, string> = {
     leadership: "/leadership/",
     programme_manager: "/manager/",
-    client: "/client/",
     marcom: "/marcom/",
-    finance: "/finance/",
+    programme_lead: "/lead/",
   };
   await page.goto(homes[role]!);
   await waitForHydration(page);

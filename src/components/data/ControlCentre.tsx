@@ -34,10 +34,9 @@ const QUICK = [
 
 const ROLES: Role[] = [
   "leadership",
+  "programme_lead",
   "programme_manager",
-  "finance",
   "marcom",
-  "client",
 ];
 
 export function ControlCentre() {

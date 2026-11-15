@@ -10,6 +10,10 @@ import {
   canVerifyExpense,
 } from "@/lib/rules/expense";
 import {
+  canActorVerifyExpense,
+  canDecideFinanceRevision,
+} from "@/lib/permissions";
+import {
   needsLeadershipForReallocation,
   validateBudgetRevision,
   type RevisionLine,
@@ -64,11 +68,9 @@ export function applyVerifyExpense(
   expenseId: ID,
   opts?: { verifiedAmount?: number; remarks?: string },
 ): Result<true> {
-  if (draft.meta.currentRole !== "finance" && !draft.meta.allowRuleBreaking) {
-    return err({
-      code: "EXP_VERIFY_ROLE",
-      message: "Only Finance can verify expenses.",
-    });
+  const actorCheck = canActorVerifyExpense(draft, expenseId);
+  if (!actorCheck.ok) {
+    return err({ code: actorCheck.code, message: actorCheck.message });
   }
 
   const expense = draft.expenses[expenseId];
@@ -99,10 +101,11 @@ export function applyRejectExpense(
   expenseId: ID,
   remarks: string,
 ): Result<true> {
-  if (draft.meta.currentRole !== "finance" && !draft.meta.allowRuleBreaking) {
+  const actorCheck = canActorVerifyExpense(draft, expenseId);
+  if (!actorCheck.ok) {
     return err({
-      code: "EXP_REJECT_ROLE",
-      message: "Only Finance can reject expenses.",
+      code: actorCheck.code.replace("VERIFY", "REJECT"),
+      message: actorCheck.message.replace("verify", "reject"),
     });
   }
 
@@ -229,10 +232,10 @@ export function applyDecideBudgetRevision(
   const isLeadershipStep = revision.status === "pending_leadership";
 
   if (isFinanceStep) {
-    if (role !== "finance" && !draft.meta.allowRuleBreaking) {
+    if (!canDecideFinanceRevision(draft, revision.programmeId)) {
       return err({
         code: "BUD_REV_ROLE",
-        message: "Finance must decide this revision first.",
+        message: "Programme Lead or Leadership must decide this revision first.",
       });
     }
   } else if (isLeadershipStep) {

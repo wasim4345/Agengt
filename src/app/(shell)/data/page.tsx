@@ -15,10 +15,9 @@ export default function DataManagerPage() {
     <RoleGate
       allow={[
         "leadership",
+        "programme_lead",
         "programme_manager",
-        "client",
         "marcom",
-        "finance",
       ]}
     >
       <PageHeader

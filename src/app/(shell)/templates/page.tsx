@@ -60,7 +60,7 @@ export default function TemplatesPage() {
   }
 
   return (
-    <RoleGate allow={["programme_manager", "leadership"]}>
+    <RoleGate allow={["programme_manager", "programme_lead", "leadership"]}>
       <PageHeader
         title="Templates"
         description="Preview, duplicate, edit, or start a programme from a template."

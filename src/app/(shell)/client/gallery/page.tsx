@@ -21,7 +21,7 @@ export default function ClientGalleryPage() {
   );
 
   return (
-    <RoleGate allow={["client"]}>
+    <RoleGate allow={[]}>
       <PageHeader
         title="Gallery"
         description="Approved photographs for your programmes."

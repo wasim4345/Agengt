@@ -206,8 +206,8 @@ describe("lifecycle rules coverage", () => {
       (e) => e.type === "photograph" && !e.deleted && !e.reportId,
     );
     if (photo) {
-      store.getState().setRole("client");
-      store.getState().setUser(IDS.users.rahul);
+      store.getState().setRole("marcom");
+      store.getState().setUser(IDS.users.priya);
       expect(canSoftDeleteEvidence(store.getState().state, photo.id).ok).toBe(
         false,
       );
@@ -229,8 +229,8 @@ describe("lifecycle rules coverage", () => {
       );
     });
     if (linked) {
-      store.getState().setRole("client");
-      store.getState().setUser(IDS.users.rahul);
+      store.getState().setRole("marcom");
+      store.getState().setUser(IDS.users.priya);
       expect(canSoftDeleteEvidence(store.getState().state, linked.id).ok).toBe(
         false,
       );

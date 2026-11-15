@@ -31,7 +31,7 @@ describe("budget rules (§5)", () => {
       lines: [{ activityId: "act_p1_a07", before: 5_00_000, after: 1_000 }],
       totalAfter: 25_00_000,
       requestedBy: "usr_arjun",
-      actingRole: "finance",
+      actingRole: "programme_lead",
       requesterRole: "programme_manager",
     });
     expect(bad.ok).toBe(false);

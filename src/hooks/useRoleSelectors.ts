@@ -5,7 +5,6 @@ import type { Role } from "@/types/domain";
 import { useOsStore } from "@/store/store";
 import * as leadership from "@/selectors/leadership";
 import * as manager from "@/selectors/manager";
-import * as client from "@/selectors/client";
 import * as marcom from "@/selectors/marcom";
 import * as financeRole from "@/selectors/financeRole";
 import * as reports from "@/selectors/reports";
@@ -14,8 +13,9 @@ import * as finance from "@/selectors/finance";
 import * as core from "@/selectors/core";
 
 /**
- * Role-scoped selector surface. Client/MarCom bundles never expose
+ * Role-scoped selector surface. MarCom bundles never expose
  * functions that return internal money/remarks fields.
+ * Client selectors remain in the codebase but are not wired here (dormant).
  */
 export function useRoleSelectors() {
   const role = useOsStore((s) => s.state.meta.currentRole);
@@ -34,32 +34,18 @@ export function useRoleSelectors() {
     switch (role as Role) {
       case "leadership":
         return { ...shared, leadership, kind: "leadership" as const };
-      case "programme_manager":
-        return { ...shared, manager, kind: "manager" as const };
-      case "client":
-        return {
-          role,
-          state,
-          client,
-          reports: {
-            buildReport: (id: reports.ReportId, programmeId?: string) => {
-              if (id !== "client_programme") {
-                throw new Error("Client may only build the Client Programme Report");
-              }
-              return reports.buildReport(state, id, programmeId);
-            },
-            REPORT_CATALOGUE: reports.REPORT_CATALOGUE.filter((r) => r.clientSafe),
-          },
-          kind: "client" as const,
-        };
-      case "marcom":
-        return { role, state, marcom, kind: "marcom" as const };
-      case "finance":
+      case "programme_lead":
         return {
           ...shared,
+          manager,
           financeRole,
-          kind: "finance" as const,
+          leadership,
+          kind: "programme_lead" as const,
         };
+      case "programme_manager":
+        return { ...shared, manager, kind: "manager" as const };
+      case "marcom":
+        return { role, state, marcom, kind: "marcom" as const };
       default:
         return { ...shared, kind: "leadership" as const, leadership };
     }

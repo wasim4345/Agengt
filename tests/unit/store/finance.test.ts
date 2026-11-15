@@ -64,7 +64,7 @@ describe("M8 finance — demo steps 5 & 8", () => {
 
   it("demo step 8: Finance approve one, reject one; overspend alert present; cannot verify past budget", () => {
     const store = createTestStore();
-    store.getState().setRole("finance");
+    store.getState().setRole("programme_lead");
     store.getState().setUser(IDS.users.sunita);
 
     // Overspend alert already on Corporate pilots
@@ -159,7 +159,7 @@ describe("M8 finance — demo steps 5 & 8", () => {
       store.getState().state.budgetRevisions[revisionId]?.needsLeadership,
     ).toBe(false);
 
-    store.getState().setRole("finance");
+    store.getState().setRole("programme_lead");
     store.getState().setUser(IDS.users.sunita);
     expect(
       store.getState().decideBudgetRevision(revisionId, { approved: true })
@@ -190,7 +190,7 @@ describe("M8 finance — demo steps 5 & 8", () => {
 
   it("property: Rep = Ver + Pen holds after random finance action sequences", () => {
     const store = createTestStore();
-    store.getState().setRole("finance");
+    store.getState().setRole("programme_lead");
     store.getState().setUser(IDS.users.sunita);
 
     const submittedIds = () =>
