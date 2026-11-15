@@ -14,14 +14,14 @@ export function buildOtherProgrammes(demoDate: ISODate): ProgrammePack {
   const ac = IDS.activityCategories;
   const ec = IDS.expenseCategories;
 
-  // P2 — HDFC Udgama Accelerator (active; grant-heavy)
+  // P2 — Demo CSR Bank Udgama Accelerator (active; grant-heavy)
   {
     const pid = IDS.programmes.p2;
     const owner = IDS.users.kavya;
     pack.programmes[pid] = buildProgrammeShell({
       id: pid,
       code: "IIMCIP-ACC-2026-002",
-      name: "HDFC Udgama Accelerator",
+      name: "Demo CSR Bank Udgama Accelerator",
       categoryId: IDS.categories.acceleration,
       clientId: IDS.clients.hdfc,
       officeId: IDS.offices.kolkata,
@@ -186,14 +186,14 @@ export function buildOtherProgrammes(demoDate: ISODate): ProgrammePack {
     );
   }
 
-  // P5 — Maruti Suzuki Nurture Idea Hunt (completed)
+  // P5 — Demo Automotive OEM Nurture Idea Hunt (completed)
   {
     const pid = IDS.programmes.p5;
     const owner = IDS.users.rohit;
     pack.programmes[pid] = buildProgrammeShell({
       id: pid,
       code: "IIMCIP-CHAL-2025-005",
-      name: "Maruti Suzuki Nurture Idea Hunt",
+      name: "Demo Automotive OEM Nurture Idea Hunt",
       categoryId: IDS.categories.challenge,
       clientId: IDS.clients.maruti,
       officeId: IDS.offices.kolkata,
@@ -277,14 +277,14 @@ export function buildOtherProgrammes(demoDate: ISODate): ProgrammePack {
     });
   }
 
-  // P6 — SIDBI Seed Fund (active; ~85% grants)
+  // P6 — Demo Development Finance Seed Fund (active; ~85% grants)
   {
     const pid = IDS.programmes.p6;
     const owner = IDS.users.arjun;
     pack.programmes[pid] = buildProgrammeShell({
       id: pid,
       code: "IIMCIP-SEED-2026-006",
-      name: "SIDBI Seed Fund Programme",
+      name: "Demo Development Finance Seed Fund",
       categoryId: IDS.categories.seedFund,
       clientId: IDS.clients.sidbi,
       officeId: IDS.offices.kolkata,
@@ -317,7 +317,7 @@ export function buildOtherProgrammes(demoDate: ISODate): ProgrammePack {
       programmeId: pid,
       activityId: "act_p6_a02",
       categoryId: ec.startupGrant,
-      description: "SIDBI seed disbursement — Startup 1",
+      description: "Demo seed disbursement — Startup 1",
       day: -20,
       amount: 45_00_000,
       status: "verified",
@@ -330,7 +330,7 @@ export function buildOtherProgrammes(demoDate: ISODate): ProgrammePack {
       programmeId: pid,
       activityId: "act_p6_a02",
       categoryId: ec.startupGrant,
-      description: "SIDBI seed disbursement — Startup 2",
+      description: "Demo seed disbursement — Startup 2",
       day: -5,
       amount: 40_00_000,
       status: "submitted",
@@ -342,7 +342,7 @@ export function buildOtherProgrammes(demoDate: ISODate): ProgrammePack {
       programmeId: pid,
       activityId: "act_p6_a02",
       categoryId: ec.startupGrant,
-      description: "SIDBI seed disbursement — Startup 3 (pending docs)",
+      description: "Demo seed disbursement — Startup 3 (pending docs)",
       day: 0,
       amount: 25_00_000,
       status: "draft",
@@ -389,14 +389,14 @@ export function buildOtherProgrammes(demoDate: ISODate): ProgrammePack {
     );
   }
 
-  // P8 — Tripura immersion pending approval
+  // P8 — Demo state immersion pending approval
   {
     const pid = IDS.programmes.p8;
     const owner = IDS.users.kavya;
     pack.programmes[pid] = buildProgrammeShell({
       id: pid,
       code: "IIMCIP-IMM-2026-008",
-      name: "Ideathon & Motivation Series — Tripura",
+      name: "Ideathon & Motivation Series — Demo State",
       categoryId: IDS.categories.immersion,
       clientId: IDS.clients.tripura,
       officeId: IDS.offices.agartala,

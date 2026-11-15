@@ -27,7 +27,7 @@ test("20-minute demo script (steps 1–13)", async ({ page }) => {
   await page.getByTestId("filter-category").selectOption({ label: "Incubation" });
   await expect(page.getByTestId("kpi-total-programmes")).not.toHaveText("6");
   const openProgramme = page.getByRole("button", {
-    name: /Balmer Lawrie Startup Fund/i,
+    name: /Demo Logistics PSU Startup Fund/i,
   });
   if (await openProgramme.count()) {
     await openProgramme.first().click();

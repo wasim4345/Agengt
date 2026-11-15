@@ -13,7 +13,7 @@ import {
 import { d, ts } from "../dates";
 import { IDS } from "../ids";
 
-/** Flagship Balmer Lawrie Startup Fund — doc 08 §4 (keeps 06 demo traps). */
+/** Flagship demo logistics PSU fund — doc 08 §4 (keeps 06 demo traps). */
 export function buildP1(demoDate: ISODate): ProgrammePack {
   const pack = emptyMaps();
   const pid = IDS.programmes.p1;
@@ -24,7 +24,7 @@ export function buildP1(demoDate: ISODate): ProgrammePack {
   pack.programmes[pid] = buildProgrammeShell({
     id: pid,
     code: "IIMCIP-INC-2026-001",
-    name: "Balmer Lawrie Startup Fund",
+    name: "Demo Logistics PSU Startup Fund",
     categoryId: IDS.categories.incubation,
     clientId: IDS.clients.balmer,
     officeId: IDS.offices.kolkata,

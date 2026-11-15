@@ -1,5 +1,11 @@
 # Changelog
 
+## Security hardening for public publish (2026-11-15)
+
+- Production builds omit Playwright `E2EBridge` (`NEXT_PUBLIC_ENABLE_E2E_BRIDGE=1` only for e2e)
+- Role/persona switchers labelled as simulated demo (not login); persistent Demo environment badge
+- Seed sponsors/personas/programme titles fictionalised; contacts use `@example.invalid`
+
 ## M15 — Roles, FY portfolio, intelligence (Amendment 10) (2026-11-15)
 
 - **§0 Audit:** `AMENDMENT_AUDIT.md`

@@ -27,10 +27,12 @@ export function RoleSwitcher() {
         className="inline-flex h-9 items-center gap-2 rounded-[var(--radius-control)] border border-border bg-surface px-3 text-sm hover:bg-background focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-ring)]"
         aria-expanded={open}
         aria-haspopup="listbox"
+        aria-label="Simulated role switcher — not production login"
+        title="Simulated role switcher for this demo — not production authentication"
         data-testid="role-switcher"
         onClick={() => setOpen((v) => !v)}
       >
-        <span className="text-muted">Role</span>
+        <span className="text-muted">Simulated role</span>
         <span className="font-medium" data-testid="current-role">
           {ROLE_LABELS[role]}
         </span>
@@ -39,9 +41,12 @@ export function RoleSwitcher() {
       {open ? (
         <ul
           role="listbox"
-          aria-label="Switch role"
-          className="absolute right-0 z-40 mt-2 min-w-[12rem] rounded-xl border border-border bg-surface py-1 shadow-lg"
+          aria-label="Simulated role switcher — not production login"
+          className="absolute right-0 z-40 mt-2 min-w-[14rem] rounded-xl border border-border bg-surface py-1 shadow-lg"
         >
+          <li className="border-b border-border px-3 py-2 text-[11px] leading-snug text-muted">
+            Demo only — switches the in-browser persona. Not a real login.
+          </li>
           {ROLES.map((r) => (
             <li key={r}>
               <button
@@ -88,6 +93,8 @@ export function PersonaSwitcher() {
         className="inline-flex h-9 items-center gap-2 rounded-[var(--radius-control)] border border-border bg-surface px-3 text-sm hover:bg-background"
         aria-expanded={open}
         aria-haspopup="listbox"
+        aria-label="Simulated persona switcher — not production login"
+        title="Simulated persona for this demo — not production authentication"
         onClick={() => setOpen((v) => !v)}
       >
         <UserRound className="h-4 w-4 text-muted" aria-hidden />
@@ -97,9 +104,12 @@ export function PersonaSwitcher() {
       {open ? (
         <ul
           role="listbox"
-          aria-label="Switch persona"
+          aria-label="Simulated persona switcher — not production login"
           className="absolute right-0 z-40 mt-2 min-w-[14rem] rounded-xl border border-border bg-surface py-1 shadow-lg"
         >
+          <li className="border-b border-border px-3 py-2 text-[11px] leading-snug text-muted">
+            Demo personas only — fictitious names for walkthroughs.
+          </li>
           {personas.map((p) => (
             <li key={p.id}>
               <button

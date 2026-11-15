@@ -585,7 +585,7 @@ export const STORAGE_KEYS = {
   snapshots: "iimcip-os:v1:snapshots",
 } as const;
 
-export const SEED_VERSION = "2.2.0";
+export const SEED_VERSION = "2.2.1";
 export const CURRENT_SCHEMA_VERSION = 3 as const;
 export const DEFAULT_DEMO_DATE = "2026-11-12";
 

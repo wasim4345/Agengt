@@ -38,13 +38,20 @@ export function Header({ navToggle }: { navToggle?: ReactNode }) {
         <GlobalSearch />
       </div>
       <div className="ml-auto flex flex-wrap items-center justify-end gap-2">
+        <span
+          className="inline-flex h-9 items-center rounded-[var(--radius-control)] border border-primary/30 bg-primary/5 px-2.5 text-[11px] font-semibold uppercase tracking-wide text-primary"
+          data-testid="demo-environment-badge"
+          title="Fictitious sample data · simulated roles · browser-local only"
+        >
+          Demo environment
+        </span>
         <DemoClock />
         <RoleSwitcher />
         <PersonaSwitcher />
         <Link
           href="/data/"
           className="inline-flex h-9 items-center gap-1.5 rounded-[var(--radius-control)] border border-border bg-surface px-3 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-ring)] hover:bg-background"
-          title="Data Manager"
+          title="Data Manager (demo tools — browser-local sample data)"
           data-testid="data-manager-link"
         >
           <Settings2 className="h-4 w-4" aria-hidden />
