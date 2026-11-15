@@ -14,8 +14,14 @@ import { StorageBanner } from "./StorageBanner";
 
 const TYPES: EvidenceType[] = [
   "photograph",
+  "video",
   "attendance_sheet",
+  "participant_list",
   "report",
+  "presentation",
+  "feedback_form",
+  "event_invitation",
+  "press_coverage",
   "event_documentation",
   "supporting_document",
   "invoice",
@@ -200,7 +206,13 @@ export function EvidenceGrid({
             <p className="truncate text-sm font-medium">{e.fileName}</p>
             <p className="text-xs text-muted">
               {e.type} · {(e.size / 1024).toFixed(1)} KB
+              {e.description ? ` · ${e.description}` : ""}
             </p>
+            {e.sessionId && state.activitySessions[e.sessionId] ? (
+              <p className="text-[11px] text-muted">
+                Session: {state.activitySessions[e.sessionId]!.name}
+              </p>
+            ) : null}
             <div className="mt-2 flex flex-wrap gap-1">
               <Badge tone={e.clientApproved ? "on-track" : "neutral"}>
                 Client {e.clientApproved ? "✓" : "—"}

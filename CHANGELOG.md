@@ -1,5 +1,13 @@
 # Changelog
 
+## Activity Workspace depth — Outreach demo pack (2026-11-15)
+
+- Schema v4: `activityDetails`, `activityLocations`, `activitySessions`, `activityStakeholders`
+- Configurable reporting templates (outreach, bootcamp, mentoring, …)
+- Rich Overview panel (summary, locations, sessions, participation, outcomes, stakeholders, evidence)
+- Update tab: template metrics + “Prefill from activity profile”
+- Seed **IIMCIP-CHAL-2025-005 · A01 Outreach** with Jharkhand 8-session illustrative pack (financials unchanged: ₹5L / ₹4.8L)
+
 ## Security hardening for public publish (2026-11-15)
 
 - Production builds omit Playwright `E2EBridge` (`NEXT_PUBLIC_ENABLE_E2E_BRIDGE=1` only for e2e)

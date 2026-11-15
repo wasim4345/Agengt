@@ -14,9 +14,9 @@ import {
 } from "@/components/ui";
 import { formatDate } from "@/lib/format/dates";
 import { activityFinancials } from "@/selectors/finance";
-import { ImpactPanel } from "@/components/gantt/ImpactPanel";
 import { useOsStore } from "@/store/store";
 import type { ID } from "@/types/domain";
+import { ActivityOverviewPanel } from "./ActivityOverviewPanel";
 import { BudgetStrip } from "./BudgetStrip";
 import { EvidenceGrid } from "./EvidenceGrid";
 import { ExpenseTable } from "./ExpenseTable";
@@ -38,7 +38,8 @@ export function ActivityWorkspace({
   const { push } = useToast();
   const [reportId, setReportId] = useState<ID | null>(null);
   const [returnComment, setReturnComment] = useState("");
-  const [tab, setTab] = useState("update");
+  const hasDetail = Boolean(state.activityDetails[activityId]);
+  const [tab, setTab] = useState(hasDetail ? "overview" : "update");
   const [compactMoney, setCompactMoney] = useState(false);
 
   useEffect(() => {
@@ -79,10 +80,6 @@ export function ActivityWorkspace({
     (d) =>
       d.successorId === activityId || d.predecessorId === activityId,
   );
-  const milestones = state.activityMilestones
-    .filter((am) => am.activityId === activityId)
-    .map((am) => state.milestones[am.milestoneId])
-    .filter(Boolean);
 
   const submittedReports = Object.values(state.reports).filter(
     (r) => r.activityId === activityId && r.status === "submitted",
@@ -175,7 +172,11 @@ export function ActivityWorkspace({
         </Card>
       ) : null}
 
-      <Tabs defaultValue="update" value={tab} onValueChange={setTab}>
+      <Tabs
+        defaultValue={hasDetail ? "overview" : "update"}
+        value={tab}
+        onValueChange={setTab}
+      >
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="update">Update</TabsTrigger>
@@ -186,19 +187,10 @@ export function ActivityWorkspace({
         </TabsList>
 
         <TabsContent value="overview" className="mt-4 space-y-3">
-          <Card>
-            <CardContent className="space-y-2 py-4 text-sm">
-              <p>{activity.description || "No description."}</p>
-              <p className="text-muted">
-                Expected output: {activity.expectedOutput || "—"}
-              </p>
-              <p className="text-muted">
-                Milestones:{" "}
-                {milestones.map((m) => m!.name).join(", ") || "—"}
-              </p>
-            </CardContent>
-          </Card>
-          <ImpactPanel sourceActivityId={activityId} />
+          <ActivityOverviewPanel
+            programmeId={programmeId}
+            activityId={activityId}
+          />
         </TabsContent>
 
         <TabsContent value="update" className="mt-4 space-y-3">

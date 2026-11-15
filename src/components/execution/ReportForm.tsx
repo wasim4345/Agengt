@@ -11,6 +11,10 @@ import {
   useToast,
 } from "@/components/ui";
 import { validateSubmitReport } from "@/lib/rules/report";
+import {
+  outcomeLabels,
+  participationLabels,
+} from "@/lib/activityTemplates";
 import { ImpactPanel } from "@/components/gantt/ImpactPanel";
 import { useOsStore } from "@/store/store";
 import type {
@@ -19,6 +23,7 @@ import type {
   ID,
   ReportContent,
 } from "@/types/domain";
+import { ACTIVITY_REPORTING_TEMPLATE_LABELS } from "@/types/domain";
 import { ExpenseTable } from "./ExpenseTable";
 import { EvidenceGrid } from "./EvidenceGrid";
 import { EventPhotosSection } from "./EventPhotosSection";
@@ -49,6 +54,9 @@ export function ReportForm({
   const { push } = useToast();
 
   const report = state.reports[reportId];
+  const activity = state.activities[activityId];
+  const detail = state.activityDetails[activityId];
+  const template = activity?.reportingTemplate ?? "generic";
   const [content, setContent] = useState<ReportContent | null>(null);
 
   useEffect(() => {
@@ -252,6 +260,115 @@ export function ReportForm({
               />
             </Field>
           </div>
+          {detail ? (
+            <div
+              className="rounded-lg border border-border p-3"
+              data-testid="report-template-metrics"
+            >
+              <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                <p className="text-sm font-medium">
+                  Template metrics ·{" "}
+                  {ACTIVITY_REPORTING_TEMPLATE_LABELS[template]}
+                </p>
+                {!readOnly ? (
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    type="button"
+                    onClick={() =>
+                      patch({
+                        participants:
+                          detail.participation.totalParticipants ??
+                          content.participants,
+                        startups:
+                          detail.participation.startupsReached ??
+                          content.startups,
+                        participation: { ...detail.participation },
+                        outcomes: { ...detail.outcomes },
+                        qualitative: {
+                          keyAchievements:
+                            detail.qualitative.keyAchievements,
+                          challenges: detail.qualitative.challenges,
+                          recommendations:
+                            detail.qualitative.recommendations,
+                          followUpActions:
+                            detail.qualitative.followUpActions,
+                          importantLearnings:
+                            detail.qualitative.importantLearnings,
+                        },
+                        locationsSummary: detail.geographicCoverage,
+                        keyOutcomes:
+                          content.keyOutcomes ||
+                          (detail.qualitative.keyAchievements ?? []).join(
+                            "; ",
+                          ),
+                      })
+                    }
+                  >
+                    Prefill from activity profile
+                  </Button>
+                ) : null}
+              </div>
+              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                {participationLabels(template).map(({ key, label }) => (
+                  <Field key={key} label={label}>
+                    <input
+                      disabled={readOnly}
+                      type="number"
+                      className="w-full rounded-md border border-border bg-surface px-3 py-2 text-sm"
+                      value={content.participation?.[key] ?? ""}
+                      onChange={(e) => {
+                        const value = e.target.value
+                          ? Number(e.target.value)
+                          : undefined;
+                        patch({
+                          participation: {
+                            ...content.participation,
+                            [key]: value,
+                          },
+                        });
+                      }}
+                    />
+                  </Field>
+                ))}
+                {outcomeLabels(template).map(({ key, label }) => (
+                  <Field key={key} label={label}>
+                    <input
+                      disabled={readOnly}
+                      type="number"
+                      className="w-full rounded-md border border-border bg-surface px-3 py-2 text-sm"
+                      value={
+                        typeof content.outcomes?.[key] === "number"
+                          ? content.outcomes[key]
+                          : ""
+                      }
+                      onChange={(e) => {
+                        const value = e.target.value
+                          ? Number(e.target.value)
+                          : undefined;
+                        patch({
+                          outcomes: {
+                            ...content.outcomes,
+                            [key]: value,
+                          },
+                        });
+                      }}
+                    />
+                  </Field>
+                ))}
+              </div>
+              <Field label="Locations covered (summary)" className="mt-3">
+                <textarea
+                  disabled={readOnly}
+                  className="h-16 w-full rounded-md border border-border bg-surface px-3 py-2 text-sm"
+                  value={content.locationsSummary ?? ""}
+                  onChange={(e) =>
+                    patch({ locationsSummary: e.target.value })
+                  }
+                />
+              </Field>
+            </div>
+          ) : null}
           {Object.values(state.kpis).some(
             (k) => k.programmeId === report.programmeId,
           ) ? (

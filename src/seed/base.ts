@@ -24,7 +24,7 @@ export function buildDirectory(demoDate: ISODate = DEFAULT_DEMO_DATE): Pick<
   | "templates"
 > {
   return {
-    schemaVersion: 3,
+    schemaVersion: 4,
     meta: {
       demoDate,
       currentRole: "leadership" as Role,
@@ -56,6 +56,10 @@ export function emptyBusinessCollections(): Pick<
   | "programmes"
   | "activities"
   | "activityBudgets"
+  | "activityDetails"
+  | "activityLocations"
+  | "activitySessions"
+  | "activityStakeholders"
   | "dependencies"
   | "milestones"
   | "activityMilestones"
@@ -78,6 +82,10 @@ export function emptyBusinessCollections(): Pick<
     programmes: {},
     activities: {},
     activityBudgets: {},
+    activityDetails: {},
+    activityLocations: {},
+    activitySessions: {},
+    activityStakeholders: {},
     dependencies: {},
     milestones: {},
     activityMilestones: [],

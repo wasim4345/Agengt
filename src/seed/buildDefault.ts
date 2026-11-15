@@ -12,6 +12,7 @@ import {
   buildProgrammeStartups,
   buildStartups,
 } from "./startups";
+import { applyOutreachDemoPack } from "./outreachDemo";
 
 
 /** Pure seed builder — all dates relative to demoDate (doc 06 §4). */
@@ -58,6 +59,10 @@ export function buildDefaultSeed(
     programmes: pack.programmes,
     activities: pack.activities,
     activityBudgets: pack.activityBudgets,
+    activityDetails: {},
+    activityLocations: {},
+    activitySessions: {},
+    activityStakeholders: {},
     dependencies: pack.dependencies,
     milestones: pack.milestones,
     activityMilestones: pack.activityMilestones,
@@ -106,5 +111,6 @@ export function buildDefaultSeed(
 
   state.meta.seedVersion = SEED_VERSION;
   state.meta.demoDate = demoDate;
+  applyOutreachDemoPack(state);
   return state;
 }

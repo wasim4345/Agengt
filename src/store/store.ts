@@ -607,6 +607,10 @@ export const useOsStore = create<OsStore>((set, get) => {
       draft.programmes = next.programmes;
       draft.activities = next.activities;
       draft.activityBudgets = next.activityBudgets;
+      draft.activityDetails = next.activityDetails;
+      draft.activityLocations = next.activityLocations;
+      draft.activitySessions = next.activitySessions;
+      draft.activityStakeholders = next.activityStakeholders;
       draft.dependencies = next.dependencies;
       draft.milestones = next.milestones;
       draft.activityMilestones = next.activityMilestones;
@@ -617,10 +621,13 @@ export const useOsStore = create<OsStore>((set, get) => {
       draft.startups = next.startups;
       draft.programmeStartups = next.programmeStartups;
       draft.achievements = next.achievements;
+      draft.kpis = next.kpis;
       draft.approvals = next.approvals;
       draft.delayImpacts = next.delayImpacts;
       draft.notifications = next.notifications;
       draft.log = next.log;
+      draft.insightStates = next.insightStates;
+      draft.insightRuns = next.insightRuns;
       return ok(next);
     }, {
       entity: "AppState",

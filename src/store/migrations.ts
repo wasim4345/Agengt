@@ -198,6 +198,11 @@ function ensureShape(state: AppState): AppState {
     programmes,
     activities: state.activities ?? {},
     activityBudgets: state.activityBudgets ?? {},
+    activityDetails: state.activityDetails ?? fallback.activityDetails ?? {},
+    activityLocations: state.activityLocations ?? fallback.activityLocations ?? {},
+    activitySessions: state.activitySessions ?? fallback.activitySessions ?? {},
+    activityStakeholders:
+      state.activityStakeholders ?? fallback.activityStakeholders ?? {},
     dependencies: state.dependencies ?? {},
     milestones: state.milestones ?? {},
     activityMilestones: state.activityMilestones ?? [],

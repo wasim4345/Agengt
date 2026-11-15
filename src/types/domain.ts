@@ -188,6 +188,16 @@ export type ActivityStatus =
   | "on_hold"
   | "cancelled";
 
+export type ActivityReportingTemplate =
+  | "outreach"
+  | "startup_evaluation"
+  | "bootcamp"
+  | "mentoring"
+  | "investor_connect"
+  | "demo_day"
+  | "programme_closure"
+  | "generic";
+
 export interface Activity {
   id: ID;
   programmeId: ID;
@@ -205,6 +215,14 @@ export interface Activity {
   ownerId: ID;
   supportIds: ID[];
   expectedOutput: string;
+  /** Activity objective (distinct from expected outputs). */
+  objective?: string;
+  /** Expected outcomes narrative. */
+  expectedOutcomes?: string;
+  /** Partner organisation names (short list). */
+  partnerOrganisations?: string[];
+  /** Which reporting field set the Update tab emphasises. */
+  reportingTemplate?: ActivityReportingTemplate;
   priority: Priority;
   status: ActivityStatus;
   percentComplete: number; // 0-100, manager-reported in latest submitted report
@@ -212,6 +230,120 @@ export interface Activity {
   cancellationReason?: string;
 }
 // Budget lives in ActivityBudget so revisions are first-class (below)
+
+export interface ActivityLocation {
+  id: ID;
+  activityId: ID;
+  programmeId: ID;
+  state: string;
+  district?: string;
+  city?: string;
+  venue?: string;
+  fullLocation?: string;
+  sessions?: number;
+  participants?: number;
+  startupsReached?: number;
+  applications?: number;
+  sortOrder: number;
+}
+
+export interface ActivitySession {
+  id: ID;
+  activityId: ID;
+  programmeId: ID;
+  name: string;
+  date: ISODate;
+  location: string;
+  venue?: string;
+  topic?: string;
+  facilitator?: string;
+  participants?: number;
+  startupsRepresented?: number;
+  keyDiscussions?: string;
+  outcomes?: string;
+  sortOrder: number;
+}
+
+export interface ActivityParticipation {
+  totalParticipants?: number;
+  startupsReached?: number;
+  founders?: number;
+  womenLedStartups?: number;
+  students?: number;
+  mentors?: number;
+  investors?: number;
+  institutionalRepresentatives?: number;
+  partnerOrganisations?: number;
+  speakersExperts?: number;
+  outreachSessions?: number;
+}
+
+export interface ActivityOutcomes {
+  applicationsGenerated?: number;
+  startupsShortlisted?: number;
+  startupsOnboarded?: number;
+  startupsMentored?: number;
+  startupsConnectedToInvestors?: number;
+  startupsReceivingFunding?: number;
+  partnershipsGenerated?: number;
+  expressionsOfInterest?: number;
+  leadsGenerated?: number;
+  institutionalPartnersEngaged?: number;
+  ecosystemPartnersEngaged?: number;
+  other?: { label: string; value: number }[];
+}
+
+export interface ActivityQualitative {
+  keyAchievements?: string[];
+  importantLearnings?: string[];
+  successStories?: string;
+  stakeholderFeedback?: string;
+  challenges?: string[];
+  recommendations?: string[];
+  followUpActions?: string[];
+  nextSteps?: string;
+  /** INTERNAL — never shown to MarCom */
+  internalRemarks?: string;
+}
+
+export interface ActivityStakeholder {
+  id: ID;
+  activityId: ID;
+  programmeId: ID;
+  organisationName: string;
+  organisationType:
+    | "academic"
+    | "government"
+    | "industry"
+    | "ecosystem"
+    | "investor"
+    | "mentor"
+    | "corporate"
+    | "other";
+  contactPerson?: string;
+  roleInActivity?: string;
+  contribution?: string;
+  location?: string;
+  engagementStatus?: "engaged" | "planned" | "completed" | "declined";
+  marcomVisible?: boolean;
+  sortOrder: number;
+}
+
+/** Rich operational profile for an activity (linked 1:1). */
+export interface ActivityDetail {
+  activityId: ID;
+  programmeId: ID;
+  geographicCoverage?: string;
+  locationsCovered?: number;
+  participatingInstitutions?: string[];
+  deliveryMethodology?: string;
+  activitiesUndertaken?: string;
+  participation: ActivityParticipation;
+  outcomes: ActivityOutcomes;
+  qualitative: ActivityQualitative;
+  /** Illustrative demo marker for sample packs. */
+  demoIllustrative?: boolean;
+}
 
 export interface ActivityBudget {
   activityId: ID;
@@ -347,6 +479,19 @@ export interface ReportContent {
     revisedEnd?: ISODate;
   };
   cancellationReason?: string;
+  /** Structured metrics captured during reporting (template-driven). */
+  participation?: ActivityParticipation;
+  outcomes?: ActivityOutcomes;
+  qualitative?: Pick<
+    ActivityQualitative,
+    | "keyAchievements"
+    | "challenges"
+    | "recommendations"
+    | "followUpActions"
+    | "importantLearnings"
+  >;
+  locationsSummary?: string;
+  sessionsSummary?: string;
 }
 
 export interface ReportVersion {
@@ -360,8 +505,14 @@ export interface ReportVersion {
 
 export type EvidenceType =
   | "photograph"
+  | "video"
   | "attendance_sheet"
+  | "participant_list"
   | "report"
+  | "presentation"
+  | "feedback_form"
+  | "event_invitation"
+  | "press_coverage"
   | "event_documentation"
   | "supporting_document"
   | "invoice";
@@ -371,6 +522,7 @@ export interface Evidence {
   programmeId: ID;
   activityId: ID;
   reportId?: ID;
+  sessionId?: ID;
   type: EvidenceType;
   fileName: string;
   mime: string;
@@ -378,6 +530,7 @@ export interface Evidence {
   blobKey?: string;
   thumb?: string; // data URL (images)
   caption?: string;
+  description?: string;
   /** Doc 09: photo order within a report. */
   order?: number;
   uploadedBy: ID;
@@ -536,7 +689,7 @@ export interface AppMeta {
 }
 
 export interface AppState {
-  schemaVersion: 1 | 2 | 3;
+  schemaVersion: 1 | 2 | 3 | 4;
   meta: AppMeta;
   users: Record<ID, User>;
   clients: Record<ID, Client>;
@@ -548,6 +701,10 @@ export interface AppState {
   programmes: Record<ID, Programme>;
   activities: Record<ID, Activity>;
   activityBudgets: Record<ID, ActivityBudget>; // keyed by activityId
+  activityDetails: Record<ID, ActivityDetail>; // keyed by activityId
+  activityLocations: Record<ID, ActivityLocation>;
+  activitySessions: Record<ID, ActivitySession>;
+  activityStakeholders: Record<ID, ActivityStakeholder>;
   dependencies: Record<ID, Dependency>;
   milestones: Record<ID, Milestone>;
   activityMilestones: ActivityMilestone[];
@@ -585,8 +742,22 @@ export const STORAGE_KEYS = {
   snapshots: "iimcip-os:v1:snapshots",
 } as const;
 
-export const SEED_VERSION = "2.2.1";
-export const CURRENT_SCHEMA_VERSION = 3 as const;
+export const SEED_VERSION = "2.3.0";
+export const CURRENT_SCHEMA_VERSION = 4 as const;
+
+export const ACTIVITY_REPORTING_TEMPLATE_LABELS: Record<
+  ActivityReportingTemplate,
+  string
+> = {
+  outreach: "Outreach / Awareness",
+  startup_evaluation: "Startup Evaluation",
+  bootcamp: "Bootcamp / Workshop",
+  mentoring: "Mentoring",
+  investor_connect: "Investor Connect",
+  demo_day: "Demo Day",
+  programme_closure: "Programme Closure",
+  generic: "Generic",
+};
 export const DEFAULT_DEMO_DATE = "2026-11-12";
 
 export const DEFAULT_INTELLIGENCE_SETTINGS = {
