@@ -1,5 +1,79 @@
 # Changelog
 
+## Activity Workspace depth — Outreach demo pack (2026-11-15)
+
+- Schema v4: `activityDetails`, `activityLocations`, `activitySessions`, `activityStakeholders`
+- Configurable reporting templates (outreach, bootcamp, mentoring, …)
+- Rich Overview panel (summary, locations, sessions, participation, outcomes, stakeholders, evidence)
+- Update tab: template metrics + “Prefill from activity profile”
+- Seed **IIMCIP-CHAL-2025-005 · A01 Outreach** with Jharkhand 8-session illustrative pack (financials unchanged: ₹5L / ₹4.8L)
+
+## Security hardening for public publish (2026-11-15)
+
+- Production builds omit Playwright `E2EBridge` (`NEXT_PUBLIC_ENABLE_E2E_BRIDGE=1` only for e2e)
+- Role/persona switchers labelled as simulated demo (not login); persistent Demo environment badge
+- Seed sponsors/personas/programme titles fictionalised; contacts use `@example.invalid`
+
+## M15 — Roles, FY portfolio, intelligence (Amendment 10) (2026-11-15)
+
+- **§0 Audit:** `AMENDMENT_AUDIT.md`
+- **§2 Four roles:** `leadership` · `programme_lead` · `programme_manager` · `marcom`; `Programme.leadId`; Lead/Leadership expense verify; schema v3
+- **§3 FY portfolio:** Indian FY selector (`?fy=`), `classifyProgramme`, Completed/Ongoing/Upcoming cards → dedicated `/leadership/listing/` (search/sort)
+- **Portfolio Impact removed** from Leadership dashboard (master prompt §3F)
+- **§4 Workspace layers:** A Financials · B Operational · C Programme Intelligence
+- **§5 Programme Intelligence:** deterministic OPS/FIN/RSK/PRF rules in `selectors/intelligence.ts`; Generate/Refresh; dismiss/ack; evidence kinds
+- **§6 Institutional Intelligence:** `/institutional/` Leadership-only; sections A–E + INS-01…09 + intervention centre
+- Store: `recordInsightRun` / `setInsightState`; insight runs for New/Resolved diffs
+
+## M7b / M9b — Budget vs cost & event photos (doc 09) (2026-11-15)
+
+- Activity workspace **BudgetStrip**: Budget approved · Cost incurred · Surplus/Deficit with utilisation bar and alerts
+- Report form **Event photos** (IndexedDB blobs, downscale, captions, soft/hard validation via `requireEventPhotos`)
+- PM dashboard **Budget vs cost by activity** chart + table (`manager.budgetVsCostByActivity`)
+- Leadership **Overall current surplus** KPI, programme Cost/Surplus columns, budget-vs-cost financial chart
+- Finance selectors: `surplus`, `utilisation`, `alertLevel`, `portfolioSurplus`, `previewActivityAfterReport`
+- Seed 2.1.0: A07 ~92%, A08 deficit, P5 programme deficit, 7 outreach event photos; integrity surplus checks
+- Tests: doc 09 surplus identities, event-photo validation
+
+## M10 — Reports centre (2026-11-12)
+
+- Reports Centre `/reports`: 7 live report previews from `selectors/reports`
+- Parameter bar (programme, date range, sections), A4 paper preview, "Data as of" stamp
+- Export PDF via print stylesheet (`window.print`); CSV download with totals
+- Client-safe *Client Programme Report* on `/reports` and `/client/reports`
+- Tests: demo step 13; CSV totals equal Leadership/Finance dashboard totals
+
+## M9 — Dashboards (2026-11-12)
+
+- Role dashboards (Leadership / PM / Client / MarCom / Finance) use Recharts + existing selectors; no hard-coded KPI numbers
+- Leadership filters persist in URL query (`category`, `client`, `manager`, `status`, `from`, `to`)
+- Empty states when a widget has no rows
+- **Behaviour fix:** `isOverdue` now treats an activity as overdue when demo date is *after* effective end (was inverted)
+
+## M3 — Rules & selectors (2026-11-12)
+
+- `lib/rules`: dependencies (cycle/schedule/impact), programme validation (E/W), report validation (RPT_*), budget, expense
+- `selectors/*`: core, finance, leadership, manager, client, marcom, financeRole, reports, integrity
+- `useRoleSelectors` role-scoped surface; client/MarCom leak guards
+- Exhaustive unit tests; coverage ≥90% on `lib/rules` + `selectors` (npm test runs with coverage thresholds)
+
+## M2 — Shell & roles (2026-11-12)
+
+- App shell: Header, Sidebar, Banner, Demo clock, Role/Persona switchers, Notifications bell, global programme search
+- `navConfig` drives role-specific navigation; root redirects to role home
+- `RoleGate` omits forbidden page content and shows “Not available for this role”
+- Role homes and nav destinations wired to live store data (thin screens; full modules later)
+
+## M1 — Store & seed (2026-11-12)
+
+- Domain types from doc 03 in `src/types/domain.ts`
+- Zustand + immer store with `Result<T>` actions, activity log + notifications
+- localStorage persistence (debounced), snapshot storage, cross-tab sync, hydration gate
+- IndexedDB file blob helpers (`src/store/files.ts`) and schema migrations
+- Undo via immer patches (last mutation)
+- Full default seed (doc 06 §4) plus healthy / troubled / empty scenarios; Reset / Clear
+- `selectors/finance.ts` money maths and `selectors/integrity.ts` all-green on default seed
+
 ## M0 — Scaffold (2026-11-12)
 
 - Next.js App Router with static export, TypeScript strict, Tailwind, ESLint

@@ -1,0 +1,331 @@
+import type { AppState, ID, ProgrammeStatus } from "@/types/domain";
+import {
+  delayedActivities,
+  orgProgress,
+  programmeProgress,
+} from "./core";
+import {
+  activityFinancials,
+  portfolioSurplus,
+  programmeFinancials,
+  type PortfolioSurplus,
+} from "./finance";
+import { dayDiff } from "@/lib/rules/dates";
+import { milestoneHealth } from "@/lib/rules/dependencies";
+import {
+  classifyProgramme,
+  type ProgrammeClassification,
+} from "@/lib/classifyProgramme";
+import { fyContaining, parseFyLabel, type FinancialYear } from "@/lib/fy";
+
+export type LeadershipFilters = {
+  categoryId?: ID;
+  clientId?: ID;
+  managerId?: ID;
+  leadId?: ID;
+  officeId?: ID;
+  sponsorType?: string;
+  status?: ProgrammeStatus;
+  dateFrom?: string;
+  dateTo?: string;
+  /** Indian FY label e.g. 2026-27 */
+  fy?: string;
+  /** Quick filter from summary cards */
+  classification?: Exclude<ProgrammeClassification, "other">;
+  /** D-4: when true, expenditure uses expenses dated inside the FY only */
+  spendInFyOnly?: boolean;
+};
+
+export function resolveFy(
+  state: AppState,
+  filters?: LeadershipFilters,
+): FinancialYear {
+  if (filters?.fy) {
+    const parsed = parseFyLabel(filters.fy);
+    if (parsed) return parsed;
+  }
+  return fyContaining(state.meta.demoDate);
+}
+
+function matchesFilters(
+  state: AppState,
+  programmeId: ID,
+  filters?: LeadershipFilters,
+): boolean {
+  if (!filters) return true;
+  const p = state.programmes[programmeId];
+  if (!p) return false;
+  if (filters.categoryId && p.categoryId !== filters.categoryId) return false;
+  if (filters.clientId && p.clientId !== filters.clientId) return false;
+  if (filters.managerId && p.managerId !== filters.managerId) return false;
+  if (filters.leadId && p.leadId !== filters.leadId) return false;
+  if (filters.officeId && p.officeId !== filters.officeId) return false;
+  if (filters.sponsorType) {
+    const type = state.clients[p.clientId]?.type;
+    if (type !== filters.sponsorType) return false;
+  }
+  if (filters.status && p.status !== filters.status) return false;
+  if (filters.dateFrom && dayDiff(p.endDate, filters.dateFrom) > 0) return false;
+  if (filters.dateTo && dayDiff(filters.dateTo, p.startDate) > 0) return false;
+
+  const fy = resolveFy(state, filters);
+  const classification = classifyProgramme(p, fy, state.meta.demoDate);
+  if (filters.classification && classification !== filters.classification) {
+    return false;
+  }
+  // Default portfolio scope: exclude "other" when an FY is selected
+  if (filters.fy && !filters.classification && classification === "other") {
+    if (filters.status !== "cancelled") return false;
+  }
+  return true;
+}
+
+export function portfolioClassificationCounts(
+  state: AppState,
+  filters?: LeadershipFilters,
+) {
+  const fy = resolveFy(state, filters);
+  const base = { ...filters, classification: undefined };
+  const counts = { completed: 0, ongoing: 0, upcoming: 0, other: 0 };
+  for (const p of Object.values(state.programmes)) {
+    if (!matchesFilters(state, p.id, base)) continue;
+    const c = classifyProgramme(p, fy, state.meta.demoDate);
+    counts[c] += 1;
+  }
+  return counts;
+}
+
+export function kpis(state: AppState, filters?: LeadershipFilters) {
+  const programmes = Object.values(state.programmes).filter((p) =>
+    matchesFilters(state, p.id, filters),
+  );
+  const active = programmes.filter((p) => p.status === "active");
+  const completed = programmes.filter((p) => p.status === "completed");
+  let totalBudget = 0;
+  let verified = 0;
+  let reported = 0;
+  for (const p of programmes) {
+    const fin = programmeFinancials(state, p.id);
+    totalBudget += fin.budget;
+    verified += fin.verified;
+    reported += fin.reported;
+  }
+  const delayed = delayedActivities(state).filter((a) =>
+    programmes.some((p) => p.id === a.programmeId),
+  );
+  const progress = orgProgress(state);
+
+  return {
+    totalProgrammes: programmes.length,
+    active: active.length,
+    completed: completed.length,
+    totalBudget,
+    verifiedExpenditure: verified,
+    reportedExpenditure: reported,
+    remaining: totalBudget - reported,
+    overallProgress: progress.equalWeight,
+    overallProgressBudgetWeighted: progress.budgetWeighted,
+    delayedActivities: delayed.length,
+  };
+}
+
+/** Doc 09 Feature D — overall current surplus for filtered portfolio. */
+export function overallSurplus(
+  state: AppState,
+  filters?: LeadershipFilters,
+): PortfolioSurplus & {
+  programmes: {
+    id: ID;
+    code: string;
+    name: string;
+    budget: number;
+    cost: number;
+    surplus: number;
+  }[];
+} {
+  const programmes = Object.values(state.programmes).filter((p) =>
+    matchesFilters(state, p.id, filters),
+  );
+  const base = portfolioSurplus(
+    state,
+    programmes.map((p) => p.id),
+  );
+  return {
+    ...base,
+    programmes: programmes.map((p) => {
+      const fin = programmeFinancials(state, p.id);
+      return {
+        id: p.id,
+        code: p.code,
+        name: p.name,
+        budget: fin.budget,
+        cost: fin.reported,
+        surplus: fin.surplus,
+      };
+    }),
+  };
+}
+
+export function programmeRows(state: AppState, filters?: LeadershipFilters) {
+  return Object.values(state.programmes)
+    .filter((p) => matchesFilters(state, p.id, filters))
+    .map((p) => {
+      const fin = programmeFinancials(state, p.id);
+      const delayed = delayedActivities(state, p.id).length;
+      const progress = programmeProgress(state, p.id);
+      const utilised =
+        fin.budget === 0 ? null : fin.verified / fin.budget;
+      return {
+        id: p.id,
+        code: p.code,
+        name: p.name,
+        categoryId: p.categoryId,
+        category: state.categories[p.categoryId]?.name,
+        clientId: p.clientId,
+        client: state.clients[p.clientId]?.name,
+        sponsorType: state.clients[p.clientId]?.type,
+        officeId: p.officeId,
+        office: p.officeId ? state.offices[p.officeId]?.name : undefined,
+        stateName: p.officeId ? state.offices[p.officeId]?.state : undefined,
+        managerId: p.managerId,
+        manager: state.users[p.managerId]?.name,
+        leadId: p.leadId,
+        lead: state.users[p.leadId]?.name,
+        classification: classifyProgramme(
+          p,
+          resolveFy(state, filters),
+          state.meta.demoDate,
+        ),
+        budget: fin.budget,
+        costIncurred: fin.reported,
+        surplus: fin.surplus,
+        status: p.status,
+        progress,
+        verified: fin.verified,
+        utilised,
+        delayed,
+        rag:
+          delayed > 0 || fin.alert === "critical"
+            ? ("red" as const)
+            : progress < 40
+              ? ("amber" as const)
+              : ("green" as const),
+      };
+    });
+}
+
+export function financialOverview(state: AppState, filters?: LeadershipFilters) {
+  return Object.values(state.programmes)
+    .filter((p) => matchesFilters(state, p.id, filters))
+    .map((p) => {
+      const fin = programmeFinancials(state, p.id);
+      return {
+        programmeId: p.id,
+        code: p.code,
+        budget: fin.budget,
+        cost: fin.reported,
+        surplus: fin.surplus,
+        verified: fin.verified,
+        pending: fin.pending,
+        remaining: Math.max(0, fin.remaining),
+        unallocated: fin.unallocated,
+      };
+    });
+}
+
+export function upcomingMilestones(state: AppState, withinDays = 30) {
+  const demo = state.meta.demoDate;
+  return Object.values(state.milestones)
+    .filter((m) => {
+      const delta = dayDiff(demo, m.targetDate);
+      return delta >= 0 && delta <= withinDays;
+    })
+    .map((m) => ({
+      ...m,
+      health: milestoneHealth(state, m.id),
+      programmeCode: state.programmes[m.programmeId]?.code,
+    }))
+    .sort((a, b) => dayDiff(a.targetDate, b.targetDate));
+}
+
+export function riskAlerts(state: AppState) {
+  const alerts: {
+    id: string;
+    kind: string;
+    text: string;
+    link?: string;
+  }[] = [];
+
+  for (const activity of Object.values(state.activities)) {
+    const fin = activityFinancials(state, activity.id);
+    if (fin.alert === "breach") {
+      alerts.push({
+        id: `overspend-${activity.id}`,
+        kind: "overspend",
+        text: `${activity.code} reported spend exceeds allocation`,
+        link: `/programmes/`,
+      });
+    }
+  }
+
+  for (const a of delayedActivities(state)) {
+    alerts.push({
+      id: `delayed-${a.id}`,
+      kind: "delayed",
+      text: `${a.code} is delayed or overdue`,
+      link: `/programmes/`,
+    });
+  }
+
+  for (const m of Object.values(state.milestones)) {
+    const health = milestoneHealth(state, m.id);
+    if (health === "at_risk" || health === "missed") {
+      alerts.push({
+        id: `ms-${m.id}`,
+        kind: "milestone",
+        text: `Milestone “${m.name}” is ${health.replace("_", " ")}`,
+      });
+    }
+  }
+
+  for (const approval of Object.values(state.approvals)) {
+    if (approval.status === "pending") {
+      alerts.push({
+        id: `apr-${approval.id}`,
+        kind: "approval",
+        text: `Pending ${approval.type} approval`,
+        link: `/approvals/`,
+      });
+    }
+  }
+
+  return alerts;
+}
+
+export function programmesBySponsorType(
+  state: AppState,
+  filters?: LeadershipFilters,
+) {
+  const counts = new Map<string, number>();
+  for (const p of Object.values(state.programmes)) {
+    if (!matchesFilters(state, p.id, filters)) continue;
+    const type = state.clients[p.clientId]?.type ?? "other";
+    counts.set(type, (counts.get(type) ?? 0) + 1);
+  }
+  return [...counts.entries()].map(([name, value]) => ({ name, value }));
+}
+
+export function programmesByOffice(
+  state: AppState,
+  filters?: LeadershipFilters,
+) {
+  const counts = new Map<string, number>();
+  for (const p of Object.values(state.programmes)) {
+    if (!matchesFilters(state, p.id, filters)) continue;
+    const office = p.officeId
+      ? state.offices[p.officeId]?.name ?? "Unassigned"
+      : "Unassigned";
+    counts.set(office, (counts.get(office) ?? 0) + 1);
+  }
+  return [...counts.entries()].map(([name, value]) => ({ name, value }));
+}

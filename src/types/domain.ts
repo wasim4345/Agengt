@@ -1,0 +1,778 @@
+/** Domain types from prototype-blueprint doc 03 §3 (verbatim + additive only). */
+
+export type ID = string;
+export type ISODate = string; // 2026-11-12
+export type ISODateTime = string;
+
+/** Amendment 10 — exactly four access levels. */
+export type Role =
+  | "leadership"
+  | "programme_lead"
+  | "programme_manager"
+  | "marcom";
+
+export interface User {
+  id: ID;
+  name: string;
+  email: string;
+  role: Role;
+  title: string;
+  /** Legacy sponsor-contact linkage (dormant; Client role removed). */
+  clientId?: ID;
+  avatarColor: string;
+  active: boolean;
+  /** Leadership only: false = view-only (hide Approve/Release). Default true. */
+  canApprove?: boolean;
+}
+
+export type SponsorType =
+  | "government"
+  | "corporate"
+  | "csr"
+  | "psu"
+  | "multilateral"
+  | "ngo"
+  | "other";
+
+export interface Client {
+  id: ID;
+  name: string;
+  type: SponsorType;
+  sector?: string;
+  contactName?: string;
+  contactEmail?: string;
+}
+
+/** Programme stage for P-CTX-05 ribbon (editable for custom categories). */
+export type ProgrammeStage =
+  | "awareness"
+  | "idea_to_prototype"
+  | "prototype_to_revenue"
+  | "growth"
+  | "custom";
+
+export interface Category {
+  id: ID;
+  name: string;
+  colour: string;
+  code: string;
+  builtIn: boolean;
+  stage: ProgrammeStage;
+} // programme categories
+
+export interface Office {
+  id: ID;
+  name: string;
+  state: string;
+  isHq?: boolean;
+}
+
+/** Programme output metric definition (P-CTX-01). */
+export interface Kpi {
+  id: ID;
+  programmeId: ID;
+  name: string;
+  unit: "count" | "inr";
+  target: number;
+  sortOrder: number;
+}
+
+export interface ActivityCategory {
+  id: ID;
+  name: string;
+  colour: string;
+}
+
+export interface ExpenseCategory {
+  id: ID;
+  name: string;
+}
+
+export type ProgrammeStatus =
+  | "draft"
+  | "pending_approval"
+  | "active"
+  | "on_hold"
+  | "completed"
+  | "closed"
+  | "cancelled";
+
+export interface Programme {
+  id: ID;
+  code: string; // IIMCIP-INC-2026-007 (auto)
+  name: string;
+  categoryId: ID;
+  clientId: ID;
+  officeId?: ID;
+  /** Amendment 10 — Programme Lead (exactly one). */
+  leadId: ID;
+  managerId: ID;
+  teamIds: ID[];
+  startDate: ISODate;
+  endDate: ISODate;
+  baselineEndDate?: ISODate;
+  /** Set when status moves to completed/closed. */
+  completedAt?: ISODate;
+  totalBudget: number; // current approved total
+  originalBudget: number; // frozen at activation (or creation if draft)
+  objectives: string;
+  expectedOutcomes: string;
+  keyDeliverables: string[];
+  reportingRequirements: {
+    id: ID;
+    type: string;
+    frequency: "weekly" | "fortnightly" | "monthly" | "milestone" | "final";
+  }[];
+  status: ProgrammeStatus;
+  statusReason?: string;
+  clientBudgetSummaryVisible: boolean; // default false
+  createdFromTemplateId?: ID;
+  createdAt: ISODateTime;
+  createdBy: ID;
+  wizardDraft?: { step: number }; // only while draft
+}
+
+export type InsightSeverity = "critical" | "high" | "medium" | "low";
+export type InsightCategory =
+  | "operational"
+  | "financial"
+  | "risk"
+  | "performance";
+
+export interface InsightEvidence {
+  label: string;
+  value: string;
+  kind: "fact" | "calculated" | "estimate";
+  ref?: { entity: string; id: string };
+}
+
+/** Deterministic rule-based insight (never marketed as AI). */
+export interface Insight {
+  key: string;
+  ruleId: string;
+  scope: "programme" | "institution";
+  category: InsightCategory;
+  title: string;
+  severity: InsightSeverity;
+  evidence: InsightEvidence[];
+  explanation: string;
+  recommendation: string;
+  suggestedOwnerId?: ID;
+  suggestedDueDate: ISODate;
+  programmeId?: ID;
+}
+
+export interface InsightState {
+  key: string;
+  status: "acknowledged" | "actioned" | "dismissed";
+  by: ID;
+  at: ISODateTime;
+  severityAtDismissal?: InsightSeverity;
+}
+
+export interface InsightRun {
+  id: ID;
+  scope: "programme" | "institution";
+  programmeId?: ID;
+  at: ISODateTime;
+  items: { key: string; severity: InsightSeverity }[];
+}
+
+export type Priority = "low" | "medium" | "high" | "critical";
+export type ActivityStatus =
+  | "not_started"
+  | "in_progress"
+  | "completed"
+  | "partially_completed"
+  | "delayed"
+  | "on_hold"
+  | "cancelled";
+
+export type ActivityReportingTemplate =
+  | "outreach"
+  | "startup_evaluation"
+  | "bootcamp"
+  | "mentoring"
+  | "investor_connect"
+  | "demo_day"
+  | "programme_closure"
+  | "generic";
+
+export interface Activity {
+  id: ID;
+  programmeId: ID;
+  code: string; // A01
+  name: string;
+  description: string;
+  categoryId?: ID;
+  plannedStart: ISODate;
+  plannedEnd: ISODate; // current plan
+  baselineStart?: ISODate;
+  baselineEnd?: ISODate; // frozen at activation
+  revisedEnd?: ISODate; // from delay report (forecast)
+  actualStart?: ISODate;
+  actualEnd?: ISODate;
+  ownerId: ID;
+  supportIds: ID[];
+  expectedOutput: string;
+  /** Activity objective (distinct from expected outputs). */
+  objective?: string;
+  /** Expected outcomes narrative. */
+  expectedOutcomes?: string;
+  /** Partner organisation names (short list). */
+  partnerOrganisations?: string[];
+  /** Which reporting field set the Update tab emphasises. */
+  reportingTemplate?: ActivityReportingTemplate;
+  priority: Priority;
+  status: ActivityStatus;
+  percentComplete: number; // 0-100, manager-reported in latest submitted report
+  sortOrder: number;
+  cancellationReason?: string;
+}
+// Budget lives in ActivityBudget so revisions are first-class (below)
+
+export interface ActivityLocation {
+  id: ID;
+  activityId: ID;
+  programmeId: ID;
+  state: string;
+  district?: string;
+  city?: string;
+  venue?: string;
+  fullLocation?: string;
+  sessions?: number;
+  participants?: number;
+  startupsReached?: number;
+  applications?: number;
+  sortOrder: number;
+}
+
+export interface ActivitySession {
+  id: ID;
+  activityId: ID;
+  programmeId: ID;
+  name: string;
+  date: ISODate;
+  location: string;
+  venue?: string;
+  topic?: string;
+  facilitator?: string;
+  participants?: number;
+  startupsRepresented?: number;
+  keyDiscussions?: string;
+  outcomes?: string;
+  sortOrder: number;
+}
+
+export interface ActivityParticipation {
+  totalParticipants?: number;
+  startupsReached?: number;
+  founders?: number;
+  womenLedStartups?: number;
+  students?: number;
+  mentors?: number;
+  investors?: number;
+  institutionalRepresentatives?: number;
+  partnerOrganisations?: number;
+  speakersExperts?: number;
+  outreachSessions?: number;
+}
+
+export interface ActivityOutcomes {
+  applicationsGenerated?: number;
+  startupsShortlisted?: number;
+  startupsOnboarded?: number;
+  startupsMentored?: number;
+  startupsConnectedToInvestors?: number;
+  startupsReceivingFunding?: number;
+  partnershipsGenerated?: number;
+  expressionsOfInterest?: number;
+  leadsGenerated?: number;
+  institutionalPartnersEngaged?: number;
+  ecosystemPartnersEngaged?: number;
+  other?: { label: string; value: number }[];
+}
+
+export interface ActivityQualitative {
+  keyAchievements?: string[];
+  importantLearnings?: string[];
+  successStories?: string;
+  stakeholderFeedback?: string;
+  challenges?: string[];
+  recommendations?: string[];
+  followUpActions?: string[];
+  nextSteps?: string;
+  /** INTERNAL — never shown to MarCom */
+  internalRemarks?: string;
+}
+
+export interface ActivityStakeholder {
+  id: ID;
+  activityId: ID;
+  programmeId: ID;
+  organisationName: string;
+  organisationType:
+    | "academic"
+    | "government"
+    | "industry"
+    | "ecosystem"
+    | "investor"
+    | "mentor"
+    | "corporate"
+    | "other";
+  contactPerson?: string;
+  roleInActivity?: string;
+  contribution?: string;
+  location?: string;
+  engagementStatus?: "engaged" | "planned" | "completed" | "declined";
+  marcomVisible?: boolean;
+  sortOrder: number;
+}
+
+/** Rich operational profile for an activity (linked 1:1). */
+export interface ActivityDetail {
+  activityId: ID;
+  programmeId: ID;
+  geographicCoverage?: string;
+  locationsCovered?: number;
+  participatingInstitutions?: string[];
+  deliveryMethodology?: string;
+  activitiesUndertaken?: string;
+  participation: ActivityParticipation;
+  outcomes: ActivityOutcomes;
+  qualitative: ActivityQualitative;
+  /** Illustrative demo marker for sample packs. */
+  demoIllustrative?: boolean;
+}
+
+export interface ActivityBudget {
+  activityId: ID;
+  original: number;
+  revised: number;
+} // revised===original until revised
+
+export type DepType = "FS" | "SS" | "FF" | "SF";
+
+export interface Dependency {
+  id: ID;
+  programmeId: ID;
+  successorId: ID;
+  predecessorId?: ID;
+  predecessorMilestoneId?: ID; // exactly one set
+  type: DepType;
+  lagDays: number;
+}
+
+export interface Milestone {
+  id: ID;
+  programmeId: ID;
+  name: string;
+  description?: string;
+  targetDate: ISODate;
+  rule: "all_gating_complete" | "manual";
+  manualAchievedAt?: ISODateTime;
+  clientVisible: boolean;
+  sortOrder: number;
+}
+
+export interface ActivityMilestone {
+  activityId: ID;
+  milestoneId: ID;
+  gating: boolean;
+}
+
+export interface BudgetRevision {
+  id: ID;
+  programmeId: ID;
+  no: number;
+  kind: "reallocation" | "total_change" | "activity_change";
+  reason: string;
+  lines: { activityId?: ID; before: number; after: number }[]; // activityId undefined = programme total
+  totalBefore: number;
+  totalAfter: number;
+  status:
+    | "pending_finance"
+    | "pending_leadership"
+    | "approved"
+    | "rejected"
+    | "withdrawn";
+  requestedBy: ID;
+  requestedAt: ISODateTime;
+  financeDecision?: Decision;
+  leadershipDecision?: Decision;
+  needsLeadership: boolean;
+}
+
+export interface Decision {
+  by: ID;
+  at: ISODateTime;
+  approved: boolean;
+  remarks?: string;
+}
+
+export type ExpenseStatus = "draft" | "submitted" | "verified" | "rejected";
+
+export interface Expense {
+  id: ID;
+  programmeId: ID;
+  activityId: ID;
+  reportId?: ID;
+  categoryId: ID;
+  description: string;
+  date: ISODate;
+  amount: number;
+  documentEvidenceId?: ID;
+  status: ExpenseStatus;
+  verifiedAmount?: number; // ≤ amount when partially approved
+  submittedBy?: ID;
+  submittedAt?: ISODateTime;
+  decision?: Decision; // finance decision incl. remarks
+  resubmissionOf?: ID;
+  overspendFlag?: boolean;
+}
+
+export type Conducted = "yes" | "no" | "partially";
+
+export interface ActivityReport {
+  // a "report thread"
+  id: ID;
+  programmeId: ID;
+  activityId: ID;
+  type: "interim" | "final";
+  status: "draft" | "submitted" | "returned" | "released"; // state of the latest version
+  draft: ReportContent; // editable only when draft/returned
+  versions: ReportVersion[]; // immutable once pushed
+  release?: {
+    clientVisible: boolean;
+    marcomVisible: boolean;
+    by: ID;
+    at: ISODateTime;
+    versionNo: number;
+  };
+  returnComment?: string;
+  createdBy: ID;
+  createdAt: ISODateTime;
+}
+
+export interface ReportContent {
+  activityStatus: ActivityStatus;
+  conducted: Conducted;
+  percentComplete: number;
+  description: string;
+  whatConducted: string;
+  keyOutcomes: string;
+  participants?: number;
+  startups?: number;
+  /** Period values for programme KPIs (P-CTX-01). */
+  kpiValues?: { kpiId: ID; value: number }[];
+  /** Doc 09: manager marks report as covering an event (photos section). */
+  isEvent?: boolean;
+  observations: string; // INTERNAL
+  additionalRemarks: string; // INTERNAL
+  clientSummary: string; // shown to client/MarCom after release
+  progressDetails?: string;
+  expenseIncurred: boolean | null;
+  delay?: {
+    reason: string;
+    impact: string;
+    corrective: string;
+    revisedEnd?: ISODate;
+  };
+  cancellationReason?: string;
+  /** Structured metrics captured during reporting (template-driven). */
+  participation?: ActivityParticipation;
+  outcomes?: ActivityOutcomes;
+  qualitative?: Pick<
+    ActivityQualitative,
+    | "keyAchievements"
+    | "challenges"
+    | "recommendations"
+    | "followUpActions"
+    | "importantLearnings"
+  >;
+  locationsSummary?: string;
+  sessionsSummary?: string;
+}
+
+export interface ReportVersion {
+  no: number;
+  content: ReportContent;
+  expenseIds: ID[];
+  evidenceIds: ID[];
+  submittedBy: ID;
+  submittedAt: ISODateTime;
+}
+
+export type EvidenceType =
+  | "photograph"
+  | "video"
+  | "attendance_sheet"
+  | "participant_list"
+  | "report"
+  | "presentation"
+  | "feedback_form"
+  | "event_invitation"
+  | "press_coverage"
+  | "event_documentation"
+  | "supporting_document"
+  | "invoice";
+
+export interface Evidence {
+  id: ID;
+  programmeId: ID;
+  activityId: ID;
+  reportId?: ID;
+  sessionId?: ID;
+  type: EvidenceType;
+  fileName: string;
+  mime: string;
+  size: number;
+  blobKey?: string;
+  thumb?: string; // data URL (images)
+  caption?: string;
+  description?: string;
+  /** Doc 09: photo order within a report. */
+  order?: number;
+  uploadedBy: ID;
+  uploadedAt: ISODateTime;
+  clientApproved: boolean;
+  marcomApproved: boolean;
+  deleted?: { by: ID; at: ISODateTime; reason: string };
+}
+
+export interface Startup {
+  id: ID;
+  name: string;
+  sector: string;
+  city?: string;
+  founders?: string;
+  website?: string;
+}
+
+export interface ProgrammeStartup {
+  programmeId: ID;
+  startupId: ID;
+  status:
+    | "applied"
+    | "shortlisted"
+    | "selected"
+    | "onboarded"
+    | "graduated"
+    | "rejected"
+    | "withdrawn";
+}
+
+export interface Achievement {
+  id: ID;
+  startupId: ID;
+  programmeId: ID;
+  title: string;
+  description: string;
+  date: ISODate;
+  type: "funding" | "award" | "pilot" | "customer" | "media" | "other";
+  marcomApproved: boolean;
+  clientApproved: boolean;
+}
+
+export interface Template {
+  id: ID;
+  name: string;
+  description: string;
+  categoryId: ID;
+  builtIn: boolean;
+  activities: {
+    key: string;
+    name: string;
+    description: string;
+    activityCategoryId?: ID;
+    startOffsetDays: number;
+    durationDays: number;
+    budgetPct: number;
+    expectedOutput: string;
+    priority: Priority;
+  }[];
+  dependencies: {
+    successorKey: string;
+    predecessorKey: string;
+    type: DepType;
+    lagDays: number;
+  }[];
+  milestones: {
+    key: string;
+    name: string;
+    offsetDays: number;
+    gatingKeys: string[];
+  }[];
+}
+
+export interface Approval {
+  id: ID;
+  programmeId: ID;
+  type:
+    | "activation"
+    | "extension"
+    | "hold"
+    | "resume"
+    | "cancellation"
+    | "closure"
+    | "structure_change";
+  status: "pending" | "approved" | "rejected";
+  requestedBy: ID;
+  requestedAt: ISODateTime;
+  reason?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  payload?: any;
+  decision?: Decision;
+}
+
+export interface DelayImpact {
+  id: ID;
+  programmeId: ID;
+  sourceActivityId: ID;
+  affectedActivityId: ID;
+  originalStart: ISODate;
+  originalEnd: ISODate;
+  projectedStart: ISODate;
+  projectedEnd: ISODate;
+  shiftDays: number;
+  exceedsProgrammeEnd: boolean;
+  status: "proposed" | "applied" | "dismissed";
+}
+
+export interface Notification {
+  id: ID;
+  roleOrUserId: string;
+  text: string;
+  at: ISODateTime;
+  read: boolean;
+  link?: string;
+}
+
+export interface LogEntry {
+  id: ID;
+  at: ISODateTime;
+  actorId: ID;
+  role: Role;
+  entity: string;
+  entityId: ID;
+  action: string;
+  summary: string;
+  programmeId?: ID;
+}
+
+export interface AppMeta {
+  demoDate: ISODate;
+  currentRole: Role;
+  currentUserId: ID;
+  allowRuleBreaking: boolean;
+  seedVersion: string;
+  settings: {
+    warnPct: number /*0.9*/;
+    reallocLeadershipPct: number /*0.10*/;
+    reallocLeadershipAmount: number /*100000*/;
+    upcomingDays: number /*14*/;
+    staleReportDays: number /*14*/;
+    /** Doc 09: block submit when event has 0 photos. Default false. */
+    requireEventPhotos: boolean;
+    /** Amendment 10 — Programme / Institutional Intelligence thresholds. */
+    intelligence: {
+      staleReportDays: number;
+      overdueHighDays: number;
+      pendingVerifyDays: number;
+      pendingShareWarn: number;
+      scheduleLagPts: number;
+      minSample: number;
+    };
+  };
+  /** Optional UI state for financial year label e.g. "2026-27". */
+  selectedFy?: string;
+}
+
+export interface AppState {
+  schemaVersion: 1 | 2 | 3 | 4;
+  meta: AppMeta;
+  users: Record<ID, User>;
+  clients: Record<ID, Client>;
+  offices: Record<ID, Office>;
+  categories: Record<ID, Category>;
+  activityCategories: Record<ID, ActivityCategory>;
+  expenseCategories: Record<ID, ExpenseCategory>;
+  templates: Record<ID, Template>;
+  programmes: Record<ID, Programme>;
+  activities: Record<ID, Activity>;
+  activityBudgets: Record<ID, ActivityBudget>; // keyed by activityId
+  activityDetails: Record<ID, ActivityDetail>; // keyed by activityId
+  activityLocations: Record<ID, ActivityLocation>;
+  activitySessions: Record<ID, ActivitySession>;
+  activityStakeholders: Record<ID, ActivityStakeholder>;
+  dependencies: Record<ID, Dependency>;
+  milestones: Record<ID, Milestone>;
+  activityMilestones: ActivityMilestone[];
+  budgetRevisions: Record<ID, BudgetRevision>;
+  expenses: Record<ID, Expense>;
+  reports: Record<ID, ActivityReport>;
+  evidence: Record<ID, Evidence>;
+  startups: Record<ID, Startup>;
+  programmeStartups: ProgrammeStartup[];
+  achievements: Record<ID, Achievement>;
+  kpis: Record<ID, Kpi>;
+  approvals: Record<ID, Approval>;
+  delayImpacts: Record<ID, DelayImpact>;
+  notifications: Record<ID, Notification>;
+  log: LogEntry[];
+  insightStates: Record<string, InsightState>;
+  insightRuns: InsightRun[];
+}
+
+export type ScenarioName =
+  | "default"
+  | "healthy"
+  | "troubled"
+  | "empty";
+
+export interface SnapshotRecord {
+  id: ID;
+  name: string;
+  createdAt: ISODateTime;
+  state: AppState;
+}
+
+export const STORAGE_KEYS = {
+  state: "iimcip-os:v1:state",
+  snapshots: "iimcip-os:v1:snapshots",
+} as const;
+
+export const SEED_VERSION = "2.3.0";
+export const CURRENT_SCHEMA_VERSION = 4 as const;
+
+export const ACTIVITY_REPORTING_TEMPLATE_LABELS: Record<
+  ActivityReportingTemplate,
+  string
+> = {
+  outreach: "Outreach / Awareness",
+  startup_evaluation: "Startup Evaluation",
+  bootcamp: "Bootcamp / Workshop",
+  mentoring: "Mentoring",
+  investor_connect: "Investor Connect",
+  demo_day: "Demo Day",
+  programme_closure: "Programme Closure",
+  generic: "Generic",
+};
+export const DEFAULT_DEMO_DATE = "2026-11-12";
+
+export const DEFAULT_INTELLIGENCE_SETTINGS = {
+  staleReportDays: 14,
+  overdueHighDays: 14,
+  pendingVerifyDays: 7,
+  pendingShareWarn: 0.15,
+  scheduleLagPts: 15,
+  minSample: 3,
+} as const;
+
+export const STAGE_LABELS: Record<ProgrammeStage, string> = {
+  awareness: "Awareness",
+  idea_to_prototype: "Idea → Prototype",
+  prototype_to_revenue: "Prototype → Revenue",
+  growth: "Growth",
+  custom: "Custom",
+};

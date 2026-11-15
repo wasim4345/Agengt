@@ -1,5 +1,25 @@
 # Decisions
 
+## M3
+
+- **Coverage gate:** `npm test` runs Vitest with v8 coverage scoped to `src/lib/rules/**` and `src/selectors/**`, with ≥90% lines/functions/statements thresholds.
+- **Money in rules:** Budget/expense rules call `selectors/finance` rather than duplicating formulae (doc 04: finance maths lives only in finance selectors).
+- **No new UI:** M3 is pure logic; shell pages unchanged aside from available hook `useRoleSelectors` for later milestones.
+
+## M2
+
+- **RoleGate source of truth:** each page’s `allow` prop gates rendering (children absent from DOM). `isPathAllowed` is used for sidebar/nav membership and role-switch path preservation.
+- **Client reports path:** `/client/reports/` (not shared `/reports/`) so client nav stays client-safe.
+- **Thin screens:** M2 routes show live store-backed lists/KPIs rather than “coming soon” placeholders; full dashboards/Gantt/wizard remain later milestones.
+- **Banner dismiss:** persisted per role in `localStorage` key `iimcip-os:v1:banner-dismissed:{role}`.
+
+## M1
+
+- **Reset exactness:** `resetToSeed` replaces state with `buildDefaultSeed(demoDate)` (preserving role/user/rule-breaking prefs) without appending an extra log row, so the payload matches the pure seed.
+- **Finance selector early:** Implemented in M1 (not only M3) because integrity acceptance requires `Rep = Ver + Pen` and allocation checks.
+- **Evidence blobs:** Seed stores metadata + SVG data-URL thumbs; IndexedDB blob helper is ready for M7 uploads. Tiny PDF stand-ins are metadata-only unless explicitly put via `putTextBlob`.
+- **Action surface:** Full programme/activity workflows arrive in later milestones; M1 exposes data-management actions + `rawUpsert`/`rawDelete` for presenter edits and persistence demos.
+
 ## M0
 
 - **Scaffold method:** `create-next-app@15` generated in `/tmp` and copied into `/workspace` because the workspace already contained `.git` (create-next-app refused a non-empty/non-writable root).
